@@ -42,6 +42,16 @@ Matrix3DMath.crossProduct = function(a, b){
 }
 
 /**
+ * Compute the dot product of two vectors
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} a	Vector A
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} b	Vector B
+ * @return {Number} 									The Crossproduct Resultant
+ */
+Matrix3DMath.dotProduct = function(a, b){
+	return ((a.x*b.x) + (a.y*b.y) + (a.z*b.z) + (a.h*b.h));
+}
+
+/**
  * Scalar Multiply a point of vector
  * @param  {{x:Number, y:Number, z:Number, h:Number}} v  	The point or vector to multiple
  * @param  {{x:Number, y:Number, z:Number, h:Number}} mag	The magnitude to multiple
