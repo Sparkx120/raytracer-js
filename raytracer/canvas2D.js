@@ -1,11 +1,11 @@
 /**
- * Raytracer Canvas Control Wrapper object to handle pixel level drawing on the HTML5 Canvas
- * A
- * @param {[type]} canvasID [description]
+ * Canvas Wrapper object to handle pixel level drawing on the HTML5 Canvas as well as manage the canvas
+ * Automatically deploys a canvas to the body
+ * @author  James Wake (SparkX120)
+ * @version 0.1 (2015/07)
  */
 function Canvas2D(){
-	// this.canvas = document.getElementById(canvasID);
-	// <canvas id="2dray" style="border: 1px solid black; margin-left: 5%; width:90%; height:95%"></canvas>
+	// //Create the Canvas and Deploy it
 	this.canvas = document.createElement('canvas');
 	this.canvas.style.border = "1px solid black";
 	this.canvas.style.margin = "5%";
@@ -14,22 +14,19 @@ function Canvas2D(){
 	this.context = this.canvas.getContext('2d');
 	document.body.appendChild(this.canvas);
 
+	//Positioning and Scaling
 	this.rect = this.canvas.getBoundingClientRect();
 	$(window).on('resize', function(event){
 		this.rect = this.canvas.getBoundingClientRect();
 		this.canvas.width = rect.width;
 		this.canvas.height = rect.height;
 	}.bind(this));
-
 	this.canvas.width = this.rect.width;
 	this.canvas.height = this.rect.height;
 
+	//Persistant Pixel Image Data Object
 	this.pixelImageData = this.context.createImageData(1,1);
 	// this.pixelData = this.pixelImageData.data
-}
-
-Canvas2D.prototype.getCanvas = function(){
-	return this.canvas;
 }
 
 /**
