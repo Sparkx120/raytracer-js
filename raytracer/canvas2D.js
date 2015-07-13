@@ -18,7 +18,7 @@ function Canvas2D(){
 	$(window).on('resize', function(event){
 		this.rect = this.canvas.getBoundingClientRect();
 		this.canvas.width = rect.width;
-	this.canvas.height = rect.height;
+		this.canvas.height = rect.height;
 	}.bind(this));
 
 	this.canvas.width = this.rect.width;

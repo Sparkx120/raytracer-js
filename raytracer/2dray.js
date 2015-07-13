@@ -4,15 +4,15 @@
 	var canvas2D = new Canvas2D();
 
 	console.log(canvas2D)
-	setTimeout(function(){
-		for(var x=0; x<100000; x++){
-			canvas2D.drawPixel({x:(Math.floor(Math.random()*canvas2D.rect.width)), y:(Math.floor(Math.random()*canvas2D.rect.height)),
-								r:(Math.floor(Math.random()*256)),
-								g:(Math.floor(Math.random()*256)),
-								b:(Math.floor(Math.random()*256)),
-								a:255});
-		}
-	},100);
+	// setTimeout(function(){
+	// 	for(var x=0; x<100000; x++){
+	// 		canvas2D.drawPixel({x:(Math.floor(Math.random()*canvas2D.rect.width)), y:(Math.floor(Math.random()*canvas2D.rect.height)),
+	// 							r:(Math.floor(Math.random()*256)),
+	// 							g:(Math.floor(Math.random()*256)),
+	// 							b:(Math.floor(Math.random()*256)),
+	// 							a:255});
+	// 	}
+	// },100);
 	
 	// for(var x=0; x<100; x++){
 	// 	// console.log(x);
