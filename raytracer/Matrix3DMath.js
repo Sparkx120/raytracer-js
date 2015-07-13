@@ -267,6 +267,10 @@ Matrix3DMath.matrixInverse = function(matrix){
 	return result;
 }
 
+/**
+ * A set of predefined Matricies and Functions to build Matricies
+ * @type {Object}
+ */
 Matrices3D = {
 	/**
 	 * The Identity 4x4 Matrix
@@ -290,10 +294,20 @@ Matrices3D = {
 	testA: [[ 2, 3, 1, 5],
 			[ 1, 0, 3, 1],
 			[ 0, 2,-3, 2],
-			[ 0, 2, 3, 1]]
+			[ 0, 2, 3, 1]],
+	/**
+	 * The inversion of TestA
+	 * @type {Array<Number[]>}
+	 */
+	testAV: [[ 18, -35, -28, 1],
+			[ 9, -18, -14, 1],
+			[ -2, 4, 3, 0],
+			[ -12, 24, 19, -1]],
 }
 
-//Self calling Sanity Test
+/**
+ * Matrix Inversion Sanity Test
+ */
 function matrixInversionTest(){
 	var I = Matrices3D.I;
 	var test = Matrices3D.testA;
@@ -302,13 +316,18 @@ function matrixInversionTest(){
 	var valid = true;
 	for(var i=0;i<4;i++){
 		for(var j=0;j<4;j++){
-			if(test[i][j] != Matrices3D.testA[i][j])
+			if(test[i][j] != Matrices3D.testAV[i][j])
 				valid = false;
 		}
 	}
-	console.log(valid, " ", matrixToString(test));
+	console.log(valid, "\n", matrixToString(test));
 }
 
+/**
+ * Formats a matrix into a string
+ * @param  {Array<Number[]>} m The Matrix to format
+ * @return {String}   The formatted String
+ */
 function matrixToString(m){
 	var string = "";
 	for(var i=0; i<m.length; i++){
