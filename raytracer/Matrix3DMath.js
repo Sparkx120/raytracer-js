@@ -18,9 +18,9 @@ function Matrix3DMath(){};
 
 /**
  * Vectorizes two points
- * @param  {{x:Number, y:Number, z:Number, h:Number}} pointA The start point
- * @param  {{x:Number, y:Number, z:Number, h:Number}} pointB The end point
- * @return {{x:Number, y:Number, z:Number, h:Number}} The Vector represented by these two points
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} pointA	The start point
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} pointB	The end point
+ * @return {{x:Number, y:Number, z:Number, h:Number}} 			The Vector represented by these two points
  */
 Matrix3DMath.vectorizePoints = function(pointA, pointB){
 	var v = subtractPoints(pointA,pointB);
@@ -30,8 +30,8 @@ Matrix3DMath.vectorizePoints = function(pointA, pointB){
 
 /**
  * Compute the cross product of two vectors
- * @param  {{x:Number, y:Number, z:Number, h:Number}} a Vector A
- * @param  {{x:Number, y:Number, z:Number, h:Number}} b Vector B
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} a	Vector A
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} b	Vector B
  * @return {{x:Number, y:Number, z:Number, h:Number}} 	The Crossproduct Resultant
  */
 Matrix3DMath.crossProduct = function(a, b){
@@ -43,9 +43,9 @@ Matrix3DMath.crossProduct = function(a, b){
 
 /**
  * Scalar Multiply a point of vector
- * @param  {{x:Number, y:Number, z:Number, h:Number}} v   The point or vector to multiple
- * @param  {{x:Number, y:Number, z:Number, h:Number}} mag The magnitude to multiple
- * @return {{x:Number, y:Number, z:Number, h:Number}}     The new point
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} v  	The point or vector to multiple
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} mag	The magnitude to multiple
+ * @return {{x:Number, y:Number, z:Number, h:Number}}     	The new point
  */
 Matrix3DMath.scalarMultiply = function(v, mag){
 	return {x:v.x*mag,
@@ -56,7 +56,7 @@ Matrix3DMath.scalarMultiply = function(v, mag){
 
 /**
  * Compute the magnitude of a Vecotr
- * @param  {{x:Number, y:Number, z:Number, h:Number}} v The vector to find the magnitude of
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} v	The vector to find the magnitude of
  * @return {Number}        								The Magnitude
  */
 Matrix3DMath.magnitudeOfVector = function(v){
@@ -65,8 +65,8 @@ Matrix3DMath.magnitudeOfVector = function(v){
 
 /**
  * Adds two points A-B
- * @param  {{x:Number, y:Number, z:Number, h:Number}} a First point to add 
- * @param  {{x:Number, y:Number, z:Number, h:Number}} b Second point to add
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} a	First point to add 
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} b	Second point to add
  * @return {{x:Number, y:Number, z:Number, h:Number}} 	The resultant point
  */
 Matrix3DMath.addPoints = function(a, b){
@@ -78,8 +78,8 @@ Matrix3DMath.addPoints = function(a, b){
 
 /**
  * Subtracts two points A-B
- * @param  {{x:Number, y:Number, z:Number, h:Number}} a The point to subtract from
- * @param  {{x:Number, y:Number, z:Number, h:Number}} b The point being substracted from a
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} a	The point to subtract from
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} b	The point being substracted from a
  * @return {{x:Number, y:Number, z:Number, h:Number}} 	The resultant point
  */
 Matrix3DMath.subtractPoints = function(a, b){
@@ -113,9 +113,9 @@ Matrix3DMath.initMatrix = function(x, y){
 
 /**
  * Adds two matricies together
- * @param {Array<Number[]>} a First Matrix to add
- * @param {Array<Number[]>} b Second Matrix to add
- * @return {Array<Number[]>}  The Resultant Matrix
+ * @param {Array<Number[]>} a	First Matrix to add
+ * @param {Array<Number[]>} b	Second Matrix to add
+ * @return {Array<Number[]>} 	The Resultant Matrix
  */
 Matrix3DMath.addMatrix = function(a, b){
 	var m = this.initMatrix();
@@ -127,9 +127,9 @@ Matrix3DMath.addMatrix = function(a, b){
 
 /**
  * Scalar Multiples a Matrix by a value
- * @param  {Array<Number[]>} a   The matrix to multiply
- * @param  {Number} mag [description]
- * @return {Array<Number[]>}     The Result of the multiplication
+ * @param  {Array<Number[]>} a	The matrix to multiply
+ * @param  {Number} mag 		The Scalar Multiple
+ * @return {Array<Number[]>}    The Result of the multiplication
  */
 Matrix3DMath.scalarMultiplyMatrix = function(a, mag){
 	var m = this.initMatrix();
@@ -141,9 +141,9 @@ Matrix3DMath.scalarMultiplyMatrix = function(a, mag){
 
 /**
  * Multiplies two matricies together
- * @param  {Array<Number[]>} a First matrix to multiply
- * @param  {Array<Number[]>} b Second matrix to multiply
- * @return {Array<Number[]>}   The resultant matrix
+ * @param  {Array<Number[]>} a	First matrix to multiply
+ * @param  {Array<Number[]>} b	Second matrix to multiply
+ * @return {Array<Number[]>}  	The resultant matrix
  */
 Matrix3DMath.multiplyMatrices = function(a, b){
 	var m = this.initMatrix();
@@ -161,7 +161,7 @@ Matrix3DMath.multiplyMatrices = function(a, b){
 /**
  * Multiplies a vector or point by the matrix
  * @param  {Array<Number[]>} m 							The matrix
- * @param  {{x:Number, y:Number, z:Number, h:Number}} b The vector
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} b	The vector
  * @return {{x:Number, y:Number, z:Number, h:Number}}   The resultant vector
  */
 Matrix3DMath.multiplyVectorByMatrix = function(m, b){
@@ -200,7 +200,7 @@ Matrix3DMath.matrixCofactor = function(matrix, row, col){
 
 /**
  * Compute the determinate of a Matrix
- * @param  {Array<Number[]>} matrix The Matrix
+ * @param  {Array<Number[]>} matrix	The Matrix
  * @return {Number}        			Its Determinate
  */
 Matrix3DMath.matrixDeterminate = function(matrix){
@@ -219,7 +219,7 @@ Matrix3DMath.matrixDeterminate = function(matrix){
 
 /**
  * Compute the transpose for the Adjugate Matrix
- * @param  {Array<Number[]>} matrix The Matrix
+ * @param  {Array<Number[]>} matrix	The Matrix
  * @return {Array<Number[]>} 		The Transpose
  */
 Matrix3DMath.matrixPTranspose = function(matrix){
@@ -234,7 +234,7 @@ Matrix3DMath.matrixPTranspose = function(matrix){
 
 /**
  * Compute the Adjugate Matrix
- * @param  {Array<Number[]>} matrix The Matrix
+ * @param  {Array<Number[]>} matrix	The Matrix
  * @return {Array<Number[]>} 		The Adjugate
  */
 Matrix3DMath.matrixAdjugate = function(matrix){
@@ -256,7 +256,7 @@ Matrix3DMath.matrixAdjugate = function(matrix){
 
 /**
  * Compute the inverse of this Matrix using Crammer's Rule and the Determinate
- * @param  {Array<Number[]>} matrix The Matrix
+ * @param  {Array<Number[]>} matrix	The Matrix
  * @return {Array<Number[]>} 		The Inverse of the matrix
  */
 Matrix3DMath.matrixInverse = function(matrix){
