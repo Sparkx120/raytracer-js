@@ -42,3 +42,10 @@ Canvas2D.prototype.drawPixel = function(pixel){
 		this.context.putImageData(this.pixelImageData, pixel.x, pixel.y);
 	// }.bind(this),0);
 }
+
+Canvas2D.prototype.drawLine = function(line){
+	this.context.beginPath();
+	this.context.moveTo(line.x1, line.y1);
+	this.context.lineTo(line.x2, line.y2);
+	this.context.stroke();
+}

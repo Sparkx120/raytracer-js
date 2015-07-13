@@ -1,7 +1,7 @@
 (function(){
 	//Bootstrap Canvas
 	// body.innerHTML += "<script src='./raytracer/canvas2DControl.js'></script>";
-	var canvas2D = new Canvas2D();
+	window.canvas2D = new Canvas2D();
 
 	console.log(canvas2D)
 	// setTimeout(function(){
