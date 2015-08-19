@@ -34,13 +34,13 @@ function Canvas2D(){
  * @param  {{x: Number, y: Number, r: Number, g: Number, b: Number, a: Number}} pixel The Pixel to draw
  */
 Canvas2D.prototype.drawPixel = function(pixel){
-	// setTimeout(function(){
+	setTimeout(function(){
 		this.pixelImageData.data[0] = pixel.r;
 		this.pixelImageData.data[1] = pixel.g;
 		this.pixelImageData.data[2] = pixel.b;
 		this.pixelImageData.data[3] = pixel.a;
 		this.context.putImageData(this.pixelImageData, pixel.x, pixel.y);
-	// }.bind(this),0);
+	}.bind(this),0);
 }
 
 Canvas2D.prototype.drawLine = function(line){

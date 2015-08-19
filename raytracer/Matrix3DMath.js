@@ -16,6 +16,35 @@
  */
 function Matrix3DMath(){};
 
+Matrix3DMath.rotateOnArbitrary = function(deg, axis){
+	//Preconfig
+	var cos = Math.cos((Math.PI/180)*deg);
+	var sin = Math.sin((Math.PI/180)*deg);
+	var v = Matrix3DMath.normalizeVector(axis);
+	
+	var data = new Number[4][4];
+	
+	//Setup Jv Matrix
+	data[0][0] = 0;			data[0][1] = -v.z();	data[0][2] = v.y();		data[0][3] = 0;
+	data[1][0] = v.z();		data[1][1] = 0;			data[1][2] = -v.x();	data[1][3] = 0;
+	data[2][0] = -v.y();	data[2][1] = v.x();		data[2][2] = 0;			data[2][3] = 0;
+	data[3][0] = 0;			data[3][1] = 0;			data[3][2] = 0;			data[3][3] = 1;
+	
+
+	var R = Matrix3DMath.addMatrix(
+					Matrices3D.I, MatrixMath3D.addMatrix(
+						Matrix3DMath.scalarMultiplyMatrix(
+							data, 
+							sin)), 
+						Matrix3DMath.scalarMultiplyMatrix(
+							Matrix3DMath.multiplyMatrixWithMatrix(
+								data,
+								data),
+							 1-cos));
+	
+	return R;
+}
+
 /**
  * Vectorizes two points
  * @param  {{x:Number, y:Number, z:Number, h:Number}} pointA	The start point
@@ -23,7 +52,7 @@ function Matrix3DMath(){};
  * @return {{x:Number, y:Number, z:Number, h:Number}} 			The Vector represented by these two points
  */
 Matrix3DMath.vectorizePoints = function(pointA, pointB){
-	var v = subtractPoints(pointA,pointB);
+	var v = Matrix3DMath.subtractPoints(pointA,pointB);
 	v.h = 0;
 	return v;
 }
@@ -35,7 +64,7 @@ Matrix3DMath.vectorizePoints = function(pointA, pointB){
  * @return {{x:Number, y:Number, z:Number, h:Number}} 	The Crossproduct Resultant
  */
 Matrix3DMath.crossProduct = function(a, b){
-	return {x: (a.x*b.x)-(a.z*b.y),
+	return {x: (a.y*b.z)-(a.z*b.y),
 			y: (a.z*b.x)-(a.x*b.z),
 			z: (a.x*b.y)-(a.y*b.x),
 			h: 0.0}
@@ -162,7 +191,7 @@ Matrix3DMath.multiplyMatrices = function(a, b){
 			var v = 0;
 			for(var k=0;k<4;k++)
 				v += a[i][k]*b[k][j];
-			m[i][j] = value;
+			m[i][j] = v;
 		}
 	}
 	return m;
