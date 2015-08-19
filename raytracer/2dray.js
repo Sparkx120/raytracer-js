@@ -15,16 +15,16 @@
 	// },100);
 	
 	var camera = new Camera({
-		position: {x:0, y:8, z:4, h:1},
+		position: {x:0, y:16, z:1, h:1},
 		gaze: {x:0, y:0, z:0, h:1},
 		width: canvas2D.width,
 		height: canvas2D.height,
-		viewingAngle: 60,
+		viewingAngle: 90,
 		world: null,
 		noPipe: false
 	});
 
-	var sphere = new Sphere({}); //Create Generic Sphere
+	var sphere = new Sphere({baseC: {r:0, g:0, b:255, a:255}}); //Create Generic Sphere
 
 	var world = [];
 	world.push(camera);
@@ -38,9 +38,9 @@
 
 	console.log(raytracer);
 
-	raytracer.renderIntersectsOnly();
+	raytracer.render();
 
-	$(window).on('resize', ()=>{raytracer.renderIntersectsOnly();});
+	$(window).on('resize', ()=>{raytracer.render();});
 	
 	// for(var x=0; x<100; x++){
 	// 	// console.log(x);

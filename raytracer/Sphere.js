@@ -7,7 +7,7 @@
  * @license MIT
  */
 function Sphere(config){
-	GenericObject.apply(this, config);
+	GenericObject.call(this, config);
 }
 
 //Setup Inheritence;

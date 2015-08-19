@@ -8,7 +8,8 @@
  */
 function GenericObject(config){
 	if(config)
-		this.apply(this, config);
+		for(var key in config)
+			this[key] = config[key];
 
 	if(!this.baseC)
 		this.baseC = {r:100, g:100, b:100, a:255};

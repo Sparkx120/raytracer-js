@@ -87,21 +87,22 @@ Ray.prototype.addIntersect = function(config){
 		var intersect = Matrix3DMath.addPoints(this.e, dt);
 		// console.log("added intersect");
 
-		if(this.intersectedObject && config.t > 0){
+		if(!this.intersectedObject && config.t < 0){
 			this.lowestIntersectValue = config.t;
 			this.lowestIntersectObject = config.obj;
 			this.lowestIntersectPoint = intersect;
+			this.intersectedObjects.push(config.obj);
+			this.intersectedObject = true;
 		}
 		else{
-			if(config.t<this.lowestIntersectValue && config.t > 0){
+			if(config.t<this.lowestIntersectValue && config.t < 0){
 				this.lowestIntersectValue = config.t;
 				this.lowestIntersectObject = config.obj;
 				this.lowestIntersectPoint = intersect;
 			}
 		}
 
-		this.intersectedObjects.push(config.obj);
-		this.intersectedObject = true;
+		
 	}
 	else {throw "Not a valid addIntersect"}
 }

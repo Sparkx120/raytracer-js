@@ -21,7 +21,7 @@ Raytracer.prototype.renderIntersectsOnly = function(){
 		for(var j=0; j<this.camera.x; j++){
 			var ray = new Ray({x: j, y:i, camera: this.camera});
 			this.world.map((obj)=>{
-				if(!(obj instanceof Camera)){
+				if(obj instanceof GenericObject){
 					obj.rayIntersect(ray);
 				}
 			});
@@ -53,7 +53,45 @@ Raytracer.prototype.renderIntersectsOnly = function(){
 }
 
 Raytracer.prototype.render = function(){
-	
+	for(var i=0; i<this.camera.y; i++){
+		for(var j=0; j<this.camera.x; j++){
+			var ray = new Ray({x: j, y:i, camera: this.camera});
+			this.world.map((obj)=>{
+				if(obj instanceof GenericObject){
+					obj.rayIntersect(ray);
+				}
+			});
+
+			if(ray.intersectedObject){
+				var computedColor = {r:0,g:0,b:0,a:0};
+				computedColor = ray.lowestIntersectObject.baseC;
+				// console.log("intersect at ", i, j);
+				this.pixelRenderer.drawPixel({
+					x: j,
+					y: i,
+					r: computedColor.r/((-ray.lowestIntersectValue/12)),
+					g: computedColor.g/((-ray.lowestIntersectValue/12)),
+					b: computedColor.b/((-ray.lowestIntersectValue/12)),
+					a: computedColor.a,
+				});
+			}else{
+				// console.log("Nothing at ", i, j);
+				this.pixelRenderer.drawPixel({
+					x: j,
+					y: i,
+					r: this.backgroundColor.r,
+					g: this.backgroundColor.g,
+					b: this.backgroundColor.b,
+					a: this.backgroundColor.a,
+				});
+			}
+		}
+	}	
+}
+
+Raytracer.prototype.diffuseShader = function(ray){
+	var obj = ray.lowestIntersectObject;
+	var point = ray.lowestIntersectPoint;
 }
 
 // Raytracer.prototype.
