@@ -35,7 +35,9 @@ function Camera(config){
 
 	//Setup Camera Specifics and the world
 	this.width = config.width;
+	this.x = this.width;
 	this.height = config.height;
+	this.y = this.height;
 	this.aspect = this.width/this.height;
 	this.theta = config.viewingAngle;
 	this.world = config.world;

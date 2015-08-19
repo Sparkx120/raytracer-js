@@ -103,7 +103,7 @@ Matrix3DMath.magnitudeOfVector = function(v){
 }
 
 /**
- * Adds two points A-B
+ * Adds two points A+B
  * @param  {{x:Number, y:Number, z:Number, h:Number}} a	First point to add 
  * @param  {{x:Number, y:Number, z:Number, h:Number}} b	Second point to add
  * @return {{x:Number, y:Number, z:Number, h:Number}} 	The resultant point
@@ -112,7 +112,17 @@ Matrix3DMath.addPoints = function(a, b){
 	return {x:a.x+b.x,
 			y:a.y+b.y,
 			z:a.z+b.z,
-			h:1.0};
+			h:a.h+b.h};
+}
+
+/**
+ * Adds two vectors A+B
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} a	First vector to add 
+ * @param  {{x:Number, y:Number, z:Number, h:Number}} b	Second vector to add
+ * @return {{x:Number, y:Number, z:Number, h:Number}} 	The resultant vector
+ */
+Matrix3DMath.addVectors = function(a, b){
+	return Matrix3DMath.addPoints(a,b);
 }
 
 /**
@@ -204,10 +214,10 @@ Matrix3DMath.multiplyMatrices = function(a, b){
  * @return {{x:Number, y:Number, z:Number, h:Number}}   The resultant vector
  */
 Matrix3DMath.multiplyVectorByMatrix = function(m, b){
-	return {x: b.x*m[0][0] + b.y*m[0][1] + b.z*m[0][2] + b.h*[0][3],
-			y: b.x*m[1][0] + b.y*m[1][1] + b.z*m[1][2] + b.h*[1][3],
-			z: b.x*m[2][0] + b.y*m[2][1] + b.z*m[2][2] + b.h*[2][3],
-			h: b.x*m[3][0] + b.y*m[3][1] + b.z*m[3][2] + b.h*[3][3]};
+	return {x: b.x*m[0][0] + b.y*m[0][1] + b.z*m[0][2] + b.h*m[0][3],
+			y: b.x*m[1][0] + b.y*m[1][1] + b.z*m[1][2] + b.h*m[1][3],
+			z: b.x*m[2][0] + b.y*m[2][1] + b.z*m[2][2] + b.h*m[2][3],
+			h: b.x*m[3][0] + b.y*m[3][1] + b.z*m[3][2] + b.h*m[3][3]};
 
 }
 

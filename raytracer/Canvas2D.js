@@ -19,12 +19,13 @@ function Canvas2D(){
 	this.rect = this.canvas.getBoundingClientRect();
 	$(window).on('resize', function(event){
 		this.rect = this.canvas.getBoundingClientRect();
-		this.canvas.width = rect.width;
-		this.canvas.height = rect.height;
+		this.canvas.width = this.rect.width;
+		this.canvas.height = this.rect.height;
 	}.bind(this));
 	this.canvas.width = this.rect.width;
 	this.canvas.height = this.rect.height;
-
+	this.width = this.rect.width;
+	this.height = this.rect.height;
 	//Persistant Pixel Image Data Object
 	this.pixelImageData = this.context.createImageData(1,1);
 	// this.pixelData = this.pixelImageData.data
@@ -36,6 +37,7 @@ function Canvas2D(){
  */
 Canvas2D.prototype.drawPixel = function(pixel){
 	// setTimeout(function(){
+		//console.log("this Happened", pixel.r, pixel.g, pixel.b, pixel.a);
 		this.pixelImageData.data[0] = pixel.r;
 		this.pixelImageData.data[1] = pixel.g;
 		this.pixelImageData.data[2] = pixel.b;

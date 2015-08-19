@@ -15,17 +15,21 @@
 	// },100);
 	
 	var camera = new Camera({
-		position: {x:0, y:10, z:5, h:1},
+		position: {x:0, y:8, z:4, h:1},
 		gaze: {x:0, y:0, z:0, h:1},
-		width: 100,
-		height: 100,
+		width: canvas2D.width,
+		height: canvas2D.height,
 		viewingAngle: 60,
 		world: null,
 		noPipe: false
 	});
 
+	var sphere = new Sphere({}); //Create Generic Sphere
+
 	var world = [];
 	world.push(camera);
+	world.push(sphere);
+
 
 	var raytracer = new Raytracer({
 		world: world,
@@ -34,6 +38,9 @@
 
 	console.log(raytracer);
 
+	raytracer.renderIntersectsOnly();
+
+	$(window).on('resize', ()=>{raytracer.renderIntersectsOnly();});
 	
 	// for(var x=0; x<100; x++){
 	// 	// console.log(x);
