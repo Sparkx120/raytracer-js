@@ -64,6 +64,10 @@ Matrix3DMath.vectorizePoints = function(pointA, pointB){
  * @return {{x:Number, y:Number, z:Number, h:Number}} 	The Crossproduct Resultant
  */
 Matrix3DMath.crossProduct = function(a, b){
+	// if(a.h > 0 || b.h > 0){
+	// 	console.log("Point!!!");
+	// 	throw "Error Points can't be used in Crossproduct";
+	// }
 	return {x: (a.y*b.z)-(a.z*b.y),
 			y: (a.z*b.x)-(a.x*b.z),
 			z: (a.x*b.y)-(a.y*b.x),
@@ -137,6 +141,14 @@ Matrix3DMath.subtractPoints = function(a, b){
 			z:a.z-b.z,
 			h:1.0};
 }
+
+Matrix3DMath.normalizeVector = function(v) {
+		var out = {};
+		var mag = Matrix3DMath.magnitudeOfVector(v);
+		out = Matrix3DMath.scalarMultiply(v, (1/mag));
+		
+		return out;
+	}
 
 /**
  * Initializes a Zeroed 4x4 Matrix

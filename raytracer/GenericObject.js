@@ -13,27 +13,30 @@ function GenericObject(config){
 
 	if(!this.baseC)
 		this.baseC = {r:100, g:100, b:100, a:255};
-	if(!this.ambiantC)
-		this.ambiantC = this.baseC;
+	if(!this.ambientC)
+		this.ambientC = this.baseC;
 	if(!this.diffuseC)
 		this.diffuseC = this.baseC;
 	if(!this.specularC)
 		this.specularC = this.baseC;
 
-	if(!this.ambiantFactor)
-		this.ambiantFactor = 0.1;
+	if(!this.ambientFactor)
+		this.ambientFactor = 0.1;
 	if(!this.diffuseFactor)
-		this.diffuseFactor = 0.4;
+		this.diffuseFactor = 0.6;
 	if(!this.specularFactor)
 		this.specularFactor = 0.2;
 	if(!this.reflectionFactor)
-		this.reflectionFactor = 0.3;
+		this.reflectionFactor = 0.1;
 	if(!this.refractionFactor)
 		this.refractionFactor = 0.0;
 	if(!this.specularFalloff)
 		this.specularFalloff = 2.0;
 	if(!this.refractionIndex)
 		this.refractionIndex = 1.4;
+
+	if(!this.opacity)
+		this.opacity = 1.0;
 
 	if(!this.transform){
 		this.transform = Matrices3D.I;

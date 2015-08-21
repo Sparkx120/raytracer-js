@@ -9,6 +9,8 @@
  * @license MIT
  */
 function Camera(config){
+	// var deg2rad = Math.PI/180;
+	// var rad2deg = 180/Math.PI;
 	//Camera Specific Points and Vectors
 	/**
 	 * e is the Camera position
@@ -50,11 +52,19 @@ function Camera(config){
 	//Compute Vector u (+y axis = up)
 	var pP = {x:0, y:1, z:0, h:0};
 	this.u = Matrix3DMath.crossProduct(pP, this.n);
-	console.log(this.u, pP, this.n);
 	this.u = Matrix3DMath.scalarMultiply(this.u,-1);
+	
 
 	//Compute Vector v
 	this.v = Matrix3DMath.crossProduct(this.n, this.u);
+
+	console.log(this.u, this.v, this.n);
+
+	//Set Camera Variables
+	this.t = this.N*Math.tan((Math.PI/180)*(this.theta/2));
+	this.b = -this.t;
+	this.r = this.aspect*this.t;
+	this.l = -this.r;
 
 	//Setup the Matrix Pipe
 	this.updateMatrixPipe();
@@ -168,12 +178,6 @@ Camera.prototype.computeWS2T2 = function(){
 
 Camera.prototype.computeS1T1Mp = function(){
 	var data = Matrix3DMath.initMatrix();
-		
-	//Set Camera Variables
-	this.t = this.N*Math.tan((Math.PI/180)*(this.theta/2));
-	this.b = -this.t;
-	this.r = this.aspect*this.t;
-	this.l = -this.r;
 
 	//Localize Vars
 	var t = this.t; var b = this.b; var r = this.r; var l = this.l;

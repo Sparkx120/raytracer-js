@@ -24,7 +24,7 @@ Sphere.prototype.rayIntersect = function(ray){
 	var dRay = ray.d;
 	var e = Matrix3DMath.multiplyVectorByMatrix(this.transformInverse, eRay);
 	var d = Matrix3DMath.multiplyVectorByMatrix(this.transformInverse, dRay);
-    var eVec = {x:-e.x, y:-e.y, z:-e.z, h:0};
+    var eVec = {x:e.x, y:e.y, z:e.z, h:0};
 
 	//define Spherical Geometry Intersection here
 	var magD = Matrix3DMath.magnitudeOfVector(d);
@@ -63,10 +63,10 @@ Sphere.prototype.rayIntersect = function(ray){
  * @return {Object{x,y,z,h}}       The Normal Vector
  */
 Sphere.prototype.getNormalAt = function(point){
-	var p = Matrix3DMath.multiplyMatrixWithPoint(this.transformInverse, p);
+	var p = Matrix3DMath.multiplyVectorByMatrix(this.transformInverse, point);
 	var norm = {x:p.x, y:p.y, z:p.z, h:0};
 	norm = Matrix3DMath.normalizeVector(norm);
-	norm = Matrix3DMath.multiplyMatrixWithVector(this.transform, norm);
+	norm = Matrix3DMath.multiplyVectorByMatrix(this.transform, norm);
 	return norm;
 };
 
