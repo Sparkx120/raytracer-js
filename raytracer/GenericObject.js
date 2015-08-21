@@ -25,7 +25,7 @@ function GenericObject(config){
 	if(!this.diffuseFactor)
 		this.diffuseFactor = 0.75;
 	if(!this.specularFactor)
-		this.specularFactor = 0.9;
+		this.specularFactor = 1.0;
 	if(!this.reflectionFactor)
 		this.reflectionFactor = 0.1;
 	if(!this.refractionFactor)

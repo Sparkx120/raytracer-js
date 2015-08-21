@@ -15,7 +15,7 @@
 	// },100);
 	
 	var camera = new Camera({
-		position:     {x:0, y:16, z:1, h:1},
+		position:     {x:0, y:16, z:2.5, h:1},
 		gaze:         {x:0, y:0,  z:0, h:1},
 		width:        canvas2D.width,
 		height:       canvas2D.height,
@@ -27,7 +27,7 @@
 	var sphere = new Sphere({baseC: {r:0, g:0, b:255, a:255},
 							 specularC: {r:255, g:255, b:255, a:255}
 							}); //Create Generic Sphere
-	var olight = new OmniLight({source:{x:-1.1, y:1.1, z: 1, h:1}}); //Create an OmniLight
+	var olight = new OmniLight({source:{x:-8, y:12, z: 1, h:1}}); //Create an OmniLight
 
 	var world = [];
 	world.push(camera);
