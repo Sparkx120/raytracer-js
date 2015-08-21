@@ -107,10 +107,10 @@ class Raytracer{
 					this.pixelRenderer.drawPixel({
 						x: j,
 						y: i,
-						r: computedColor.r,
-						g: computedColor.g,
-						b: computedColor.b,
-						a: computedColor.a,
+						r: Math.min(computedColor.r, 255),
+						g: Math.min(computedColor.g, 255),
+						b: Math.min(computedColor.b, 255),
+						a: Math.min(computedColor.a, 255),
 					});
 				}else{
 					// console.log("Nothing at ", i, j);
@@ -172,6 +172,50 @@ class Raytracer{
 	}
 
 	_specularShader(ray){
-		return {r:0,g:0,b:0,a:255}
+		var object        = ray.lowestIntersectObject;
+		var intersect     = ray.lowestIntersectPoint;
+		var n             = object.getNormalAt(intersect);
+		var falloffFactor = this.falloffFactor;
+
+		var intensities      = [];
+		var unShadowedLights = 0;
+		var totalIntensity   = 0;
+
+		if(this.getLightList())
+			this.getLightList().map((light, index, lights)=>{
+				var s = Matrix3DMath.vectorizePoints(intersect, light.source);
+				var v = Matrix3DMath.vectorizePoints(intersect, ray.e);
+
+				var ns    = Matrix3DMath.dotProduct(n, s);
+				var magN  = Matrix3DMath.magnitudeOfVector(n);
+				var coeff = 2*((ns/(magN*magN)));
+				
+				var r = Matrix3DMath.addVectors(
+						Matrix3DMath.scalarMultiply(s, -1.0),
+						Matrix3DMath.scalarMultiply(n, coeff)
+					);
+
+				var f = object.specularFalloff;
+
+				//Compute Falloff from Lightsource
+				var distance = Matrix3DMath.magnitudeOfVector(s);
+
+				if(distance > -1 && distance < 1)
+					distance = 1;
+
+				//Compute Specular Intensity
+				var specularIntensity = 0;
+				var vDotr = Matrix3DMath.dotProduct(v, r)/(Matrix3DMath.magnitudeOfVector(v)*Matrix3DMath.magnitudeOfVector(r));
+				if(vDotr > 0)
+					specularIntensity = Math.max(Math.pow(vDotr,f), 0)/((distance/falloffFactor)^2);
+
+				totalIntensity += specularIntensity;
+			});
+
+		return {
+			r:object.specularC.r*totalIntensity,
+			g:object.specularC.g*totalIntensity,
+			b:object.specularC.b*totalIntensity,
+			a:255}
 	}
 }

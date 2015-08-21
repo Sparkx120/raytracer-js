@@ -23,15 +23,15 @@ function GenericObject(config){
 	if(!this.ambientFactor)
 		this.ambientFactor = 0.1;
 	if(!this.diffuseFactor)
-		this.diffuseFactor = 0.6;
+		this.diffuseFactor = 0.75;
 	if(!this.specularFactor)
-		this.specularFactor = 0.2;
+		this.specularFactor = 0.9;
 	if(!this.reflectionFactor)
 		this.reflectionFactor = 0.1;
 	if(!this.refractionFactor)
 		this.refractionFactor = 0.0;
 	if(!this.specularFalloff)
-		this.specularFalloff = 2.0;
+		this.specularFalloff = 10.0;
 	if(!this.refractionIndex)
 		this.refractionIndex = 1.4;
 
