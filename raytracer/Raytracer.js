@@ -69,62 +69,65 @@ class Raytracer{
 	}
 
 	render(){
-		var objList   = this.getObjectList();
-		var lightList = this.getLightList();
-
 		for(var i=0; i<this.camera.y; i++){
 			for(var j=0; j<this.camera.x; j++){
 				var ray = new Ray({x: j, y:i, camera: this.camera});
-				objList.map((obj)=>{
-					obj.rayIntersect(ray);
-				});
-
-				if(ray.intersectedObject){
-					var object = ray.lowestIntersectObject;
-
-					var ambientFactor  = object.ambientFactor;
-					var diffuseFactor  = object.diffuseFactor;
-					var specularFactor = object.specularFactor;
-
-					var ambientColor   = object.ambientC;
-					var diffuseColor   = {r:0,g:0,b:0,a:0};
-					var specularColor  = {r:0,g:0,b:0,a:0};
-
-					if(this.getLightList()){
-						diffuseColor   = this._diffuseShader(ray);
-						specularColor  = this._specularShader(ray);	
-					}
-					
-
-					var computedColor = {
-						r: ambientColor.r*ambientFactor + diffuseColor.r*diffuseFactor + specularColor.r*specularFactor,
-						g: ambientColor.g*ambientFactor + diffuseColor.g*diffuseFactor + specularColor.g*specularFactor,
-						b: ambientColor.b*ambientFactor + diffuseColor.b*diffuseFactor + specularColor.b*specularFactor,
-						a: object.opacity*255,
-					}
-
-					// console.log("intersect at ", i, j);
-					this.pixelRenderer.drawPixel({
-						x: j,
-						y: i,
-						r: Math.min(computedColor.r, 255),
-						g: Math.min(computedColor.g, 255),
-						b: Math.min(computedColor.b, 255),
-						a: Math.min(computedColor.a, 255),
-					});
-				}else{
-					// console.log("Nothing at ", i, j);
-					this.pixelRenderer.drawPixel({
-						x: j,
-						y: i,
-						r: this.backgroundColor.r,
-						g: this.backgroundColor.g,
-						b: this.backgroundColor.b,
-						a: this.backgroundColor.a,
-					});
-				}
+				var color = this.raytrace(ray);
+				var pixel = color;
+				pixel.x = j;
+				pixel.y = i;
+				this.pixelRenderer.drawPixel(pixel);
 			}
 		}	
+	}
+
+	raytrace(ray){
+		var objList   = this.getObjectList();
+		var lightList = this.getLightList();
+
+		objList.map((obj)=>{
+			obj.rayIntersect(ray);
+		});
+
+		if(ray.intersectedObject){
+			var object = ray.lowestIntersectObject;
+
+			var ambientFactor  = object.ambientFactor;
+			var diffuseFactor  = object.diffuseFactor;
+			var specularFactor = object.specularFactor;
+
+			var ambientColor   = object.ambientC;
+			var diffuseColor   = {r:0,g:0,b:0,a:0};
+			var specularColor  = {r:0,g:0,b:0,a:0};
+
+			if(this.getLightList()){
+				diffuseColor   = this._diffuseShader(ray);
+				specularColor  = this._specularShader(ray);	
+			}
+			
+
+			var computedColor = {
+				r: ambientColor.r*ambientFactor + diffuseColor.r*diffuseFactor + specularColor.r*specularFactor,
+				g: ambientColor.g*ambientFactor + diffuseColor.g*diffuseFactor + specularColor.g*specularFactor,
+				b: ambientColor.b*ambientFactor + diffuseColor.b*diffuseFactor + specularColor.b*specularFactor,
+				a: object.opacity*255,
+			}
+
+			// console.log("intersect at ", i, j);
+			return{
+				r: Math.min(computedColor.r, 255),
+				g: Math.min(computedColor.g, 255),
+				b: Math.min(computedColor.b, 255),
+				a: Math.min(computedColor.a, 255),
+			};
+		}
+
+		return {
+			r: this.backgroundColor.r,
+			g: this.backgroundColor.g,
+			b: this.backgroundColor.b,
+			a: this.backgroundColor.a,
+		};
 	}
 
 	_diffuseShader(ray){
@@ -141,15 +144,7 @@ class Raytracer{
 			this.getLightList().map((light, index, lights)=>{
 				var s = Matrix3DMath.vectorizePoints(intersect, light.source);
 				var v = Matrix3DMath.vectorizePoints(intersect, ray.e);
-
 				var ns    = Matrix3DMath.dotProduct(n, s);
-				// var magN  = MatrixMath3D.magnitudeOfVector(n);
-				// var coeff = 2*((ns/(magN*magN)));
-				
-				// var r = MatrixMath3D.vectorAdd(
-				// 		MatrixMath3D.scalarMultiplyVector(s, -1F),
-				// 		MatrixMath3D.scalarMultiplyVector(n, coeff)
-				// 	);
 
 				//Compute Falloff from Lightsource
 				var distance = Matrix3DMath.magnitudeOfVector(s);
@@ -185,8 +180,8 @@ class Raytracer{
 			this.getLightList().map((light, index, lights)=>{
 				var s = Matrix3DMath.vectorizePoints(intersect, light.source);
 				var v = Matrix3DMath.vectorizePoints(intersect, ray.e);
-
 				var ns    = Matrix3DMath.dotProduct(n, s);
+				
 				var magN  = Matrix3DMath.magnitudeOfVector(n);
 				var coeff = 2*((ns/(magN*magN)));
 				
