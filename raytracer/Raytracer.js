@@ -154,7 +154,7 @@ class Raytracer{
 
 				//Compute Diffuse Intensity
 				var nDots = ns/(Matrix3DMath.magnitudeOfVector(s)*Matrix3DMath.magnitudeOfVector(n));
-				var diffuseIntensity = Math.max(nDots, 0)/((distance/falloffFactor)^2);
+				var diffuseIntensity = (light.intensity*Math.max(nDots, 0))/((distance/falloffFactor)^2);
 
 				totalIntensity += diffuseIntensity;
 			});
@@ -181,7 +181,7 @@ class Raytracer{
 				var s = Matrix3DMath.vectorizePoints(intersect, light.source);
 				var v = Matrix3DMath.vectorizePoints(intersect, ray.e);
 				var ns    = Matrix3DMath.dotProduct(n, s);
-				
+
 				var magN  = Matrix3DMath.magnitudeOfVector(n);
 				var coeff = 2*((ns/(magN*magN)));
 				
@@ -202,7 +202,7 @@ class Raytracer{
 				var specularIntensity = 0;
 				var vDotr = Matrix3DMath.dotProduct(v, r)/(Matrix3DMath.magnitudeOfVector(v)*Matrix3DMath.magnitudeOfVector(r));
 				if(vDotr > 0)
-					specularIntensity = Math.max(Math.pow(vDotr,f), 0)/((distance/falloffFactor)^2);
+					specularIntensity = (light.intensity*Math.max(Math.pow(vDotr,f), 0))/((distance/falloffFactor/50)^2);
 
 				totalIntensity += specularIntensity;
 			});

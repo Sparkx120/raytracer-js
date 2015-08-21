@@ -31,7 +31,7 @@ function GenericObject(config){
 	if(!this.refractionFactor)
 		this.refractionFactor = 0.0;
 	if(!this.specularFalloff)
-		this.specularFalloff = 10.0;
+		this.specularFalloff = 50.0;
 	if(!this.refractionIndex)
 		this.refractionIndex = 1.4;
 

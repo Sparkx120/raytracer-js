@@ -27,7 +27,8 @@
 	var sphere = new Sphere({baseC: {r:0, g:0, b:255, a:255},
 							 specularC: {r:255, g:255, b:255, a:255}
 							}); //Create Generic Sphere
-	var olight = new OmniLight({source:{x:-8, y:12, z: 1, h:1}}); //Create an OmniLight
+	var olight = new OmniLight({intensity:1.8,
+								source:{x:-8, y:12, z: 1, h:1}}); //Create an OmniLight
 
 	var world = [];
 	world.push(camera);
