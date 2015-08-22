@@ -1,0 +1,88 @@
+/*
+ * Progress Bar Override
+ */
+
+/* All HTML5 progress enabled browsers */
+progress {
+
+	/* Turns off styling - not usually needed, but good to know. */
+	appearance: none;
+	-moz-appearance: none;
+	-webkit-appearance: none;
+	/* gets rid of default border in Firefox and Opera. */
+	border: 1px solid black;
+	/* Dimensions */
+	/*width: 238px;
+	height: 45px;*/
+}
+
+/* Polyfill */
+progress[role]:after {
+	background-image: none; /* removes default background from polyfill */
+}
+
+/*
+ * Background of the progress bar background
+ */
+
+/* Firefox and Polyfill */
+progress {
+	background: rgba(255,255,255,1) !important; /* !important only needed in polyfill */
+}
+
+/* Chrome */
+progress::-webkit-progress-bar {
+	background: rgba(255,255,255,1);
+}
+
+/*
+ * Background of the progress bar value
+ */
+
+/* Firefox */
+progress.prog::-moz-progress-bar {
+	background: rgba(100,100,100,0.5);
+	/*background-image: -moz-linear-gradient(
+		center bottom,
+		rgb(100,100,100) 37%,
+		rgb(100,100,100) 69%
+	);*/
+}
+
+/* Chrome */
+progress.prog::-webkit-progress-value {
+	background: rgba(100,100,100,0.5);
+	/*background-image: -webkit-gradient(
+		linear,
+		left bottom,
+		left top,
+		color-stop(0, rgb(100,100,100)),
+		color-stop(1, rgb(100,100,100))
+	);
+	background-image: -webkit-linear-gradient(
+		center bottom,
+		rgb(100,100,100) 37%,
+		rgb(100,100,100) 69%
+	);*/
+}
+
+/* Polyfill */
+progress.prog[aria-valuenow]:before {
+	background: rgba(100,100,100,0.5);
+	/*background-image: -moz-linear-gradient(
+		center bottom,
+		rgb(100,100,100) 37%,
+		rgb(100,100,100) 69%
+	);
+	background-image: -ms-linear-gradient(
+		center bottom,
+		rgb(100,100,100) 37%,
+		rgb(100,100,100) 69%
+	);
+	background-image: -o-linear-gradient(
+		center bottom,
+		rgb(100,100,100) 37%,
+		rgb(100,100,100) 69%
+	);*/
+	
+}

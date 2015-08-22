@@ -22,6 +22,51 @@ class Raytracer{
 		this.color = {r: 100, g: 100, b: 100, a: 255};
 
 		this.falloffFactor = 10;
+
+		this.drawTitle();
+	}
+
+	drawTitle(){
+		var width  = this.pixelRenderer.width;
+		var height = this.pixelRenderer.height;
+		var ctx    = this.pixelRenderer.context;
+		var x      = width  / 2;
+      	var y1     = height * (1/3);
+      	var y2     = height * (2/3);
+
+		ctx.font = '30pt Helvetica,Arial,sans-serif';
+		ctx.textAlign = 'center';
+		ctx.fillStyle = 'Black';
+		ctx.fillText('Raytracer-JS', x, y1);
+
+		ctx.font = '15pt Helvetica,Arial,sans-serif';
+		ctx.fillText('Version 0.0.1 By SparkX120', x, y2);
+
+	}
+
+	drawRenderingPlaceholder(){
+		var width  = this.pixelRenderer.width;
+		var height = this.pixelRenderer.height;
+		var ctx    = this.pixelRenderer.context;
+		var x      = width  / 2;
+      	var y      = height / 2;
+
+		ctx.fillStyle = 'rgba(255,255,255,1)';
+		ctx.fillRect(0,0,width,height);
+
+		this.progress       = document.createElement("progress");
+		this.progress.max   = 100;
+		this.progress.value = 0;
+		this.progress.style.zindex          = "99";
+		this.progress.style.width           = "100%";
+		this.progress.style.height          = "3em";
+		this.progress.style.bottom          = "50%";
+		this.progress.style.position        = "absolute";
+		this.progress.style.border          = "1px solid black";
+		this.progress.className             = "prog";
+
+		if(this.pixelRenderer.container)
+			this.pixelRenderer.container.appendChild(this.progress);
 	}
 
 	getObjectList(){
@@ -33,24 +78,47 @@ class Raytracer{
 	}
 
 	render(){
-		var imageGen = {
-			[Symbol.iterator]: function*() {
-			var pre = 0, cur = 1;
-				for(var i=0; i<this.camera.y; i++){
+		this.drawRenderingPlaceholder();
+
+		//Give canvas time to update
+		setTimeout(()=>{
+			this.pixelRenderer.clearBuffer();
+			this.camera.width = this.pixelRenderer.width;
+			this.camera.height = this.pixelRenderer.height;
+			this.camera.setupVectors();
+
+			//Run outerloop in timeout so canvas can live update
+			var i = 0;
+			var timeout = setInterval(()=>{
+				if(i<this.camera.y){ i++;
 					for(var j=0; j<this.camera.x; j++){
-						var ray = new Ray({x: j, y:i, camera: this.camera});
+						var ray   = new Ray({x: j, y:i, camera: this.camera});
 						var color = this.raytrace(ray);
 						var pixel = color;
 						pixel.x = j;
 						pixel.y = i;
-						yield pixel;
+						this.pixelRenderer.drawPixel(pixel);
 					}
-				}
-			}
-		}
+					// this.pixelRenderer.flushBuffer();
 
-		for(var pixel of imageGen)
-			this.pixelRenderer.drawPixel(pixel);
+					//Update Progress Bar
+					var progress = Math.floor((i/this.camera.y)*100);
+					if(this.progress && this.progress.value != progress){
+						this.progress.value = progress;
+					}
+
+				}else{
+					//Get rid of the Progress Bar
+					if(this.progress){
+						this.pixelRenderer.container.removeChild(this.progress);
+						this.progress = null;
+					}
+					// this.pixelRenderer.flushBuffer();
+					clearTimeout(timeout);}
+			}, 1);
+
+			
+		},10);
 	}
 
 	

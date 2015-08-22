@@ -332,7 +332,7 @@ Math3D.matrixInverse = function(matrix){
  * A set of predefined Matricies and Functions to build Matricies
  * @type {Object}
  */
-Matrices3D = {
+var Matrices3D = {
 	/**
 	 * The Identity 4x4 Matrix
 	 * @type {Array<Number[]>}

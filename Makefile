@@ -24,7 +24,7 @@ es6:
 	#cat precomp1.js | perl -pe 's/(?!^)\"use strict\"; //g' > precomp2.js
 
 closure: es6
-	java -jar ./closure/compiler.jar $(CLOSURE_CONF) --js precomp2.js --js_output_file ./js/Raytracer.js 2>/dev/null
+	java -jar ./closure/compiler.jar $(CLOSURE_CONF) --js precomp1.js --js_output_file ./js/Raytracer.js 2>/dev/null
 
 
 build: closure
