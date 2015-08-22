@@ -1,7 +1,7 @@
 ##
 # Raytracer-JS Babel and Closure Compiler build.
 # 
-# Build Environment GnuMake32 on Windows 10 with BabelJS (Node) and Google Closure Compiler
+# Build Environment GnuMake32 on Windows 10 with BabelJS (Node) and Google Closure Compiler and cygwin environment
 ##
 
 ROOT = ./raytracer-js
@@ -20,14 +20,17 @@ ES6C = babel
 CLOSURE_CONF = --language_in=ECMASCRIPT5
 
 es6:
-	$(ES6C) $(STATIC_LIBS) $(LIBS) $(OBJECTS) $(DRIVER) > precomp.js
+	$(ES6C) $(STATIC_LIBS) $(LIBS) $(OBJECTS) $(DRIVER) > precomp1.js
+	#cat precomp1.js | perl -pe 's/(?!^)\"use strict\"; //g' > precomp2.js
 
 closure: es6
-	java -jar ./closure/compiler.jar $(CLOSURE_CONF) --js precomp.js --js_output_file ./js/Raytracer.js
+	java -jar ./closure/compiler.jar $(CLOSURE_CONF) --js precomp2.js --js_output_file ./js/Raytracer.js 2>/dev/null
+
 
 build: closure
 
 release: build clean
 
 clean:
-	rm precomp.js
+	rm precomp1.js
+	rm precomp2.js

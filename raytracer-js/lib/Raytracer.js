@@ -24,42 +24,6 @@ class Raytracer{
 		this.falloffFactor = 10;
 	}
 
-	renderIntersectsOnly(){
-		for(var i=0; i<this.camera.y; i++){
-			for(var j=0; j<this.camera.x; j++){
-				var ray = new Ray({x: j, y:i, camera: this.camera});
-				this.world.map((obj)=>{
-					if(obj instanceof GenericObject){
-						obj.rayIntersect(ray);
-					}
-				});
-
-				//s
-				if(ray.intersectedObject){
-					// console.log("intersect at ", i, j);
-					this.pixelRenderer.drawPixel({
-						x: j,
-						y: i,
-						r: this.color.r,
-						g: this.color.g,
-						b: this.color.b,
-						a: this.color.a,
-					});
-				}else{
-					// console.log("Nothing at ", i, j);
-					this.pixelRenderer.drawPixel({
-						x: j,
-						y: i,
-						r: this.backgroundColor.r,
-						g: this.backgroundColor.g,
-						b: this.backgroundColor.b,
-						a: this.backgroundColor.a,
-					});
-				}
-			}
-		}
-	}
-
 	getObjectList(){
 		return this.world.filter((elem) => elem instanceof GenericObject);
 	}
@@ -69,17 +33,27 @@ class Raytracer{
 	}
 
 	render(){
-		for(var i=0; i<this.camera.y; i++){
-			for(var j=0; j<this.camera.x; j++){
-				var ray = new Ray({x: j, y:i, camera: this.camera});
-				var color = this.raytrace(ray);
-				var pixel = color;
-				pixel.x = j;
-				pixel.y = i;
-				this.pixelRenderer.drawPixel(pixel);
+		var imageGen = {
+			[Symbol.iterator]: function*() {
+			var pre = 0, cur = 1;
+				for(var i=0; i<this.camera.y; i++){
+					for(var j=0; j<this.camera.x; j++){
+						var ray = new Ray({x: j, y:i, camera: this.camera});
+						var color = this.raytrace(ray);
+						var pixel = color;
+						pixel.x = j;
+						pixel.y = i;
+						yield pixel;
+					}
+				}
 			}
-		}	
+		}
+
+		for(var pixel of imageGen)
+			this.pixelRenderer.drawPixel(pixel);
 	}
+
+	
 
 	raytrace(ray){
 		var objList   = this.getObjectList();
