@@ -6,7 +6,7 @@
 	$(window).on("load", ()=>{
 		//Camera
 		var camera = new Camera({
-			position:     {x:0, y:20, z:0, h:1},
+			position:     {x:0, y:5, z:5, h:1},
 			gaze:         {x:0, y:0,  z:0, h:1},
 			width:        canvas2D.width,
 			height:       canvas2D.height,
@@ -16,24 +16,54 @@
 		});
 
 		//Scene Object Defs
-		var sphere = new Sphere({baseC: {r:0, g:0, b:255, a:255},
-								 specularC: {r:255, g:255, b:255, a:255}
-								}); //Create Generic Sphere
-		var plane  = new Plane({baseC: {r:100, g:100, b:100, a:255},
-								specularFactor: 0,
-								reflectionFactor: 0,
-								transform: [[1,0,0, 0],
+		var sphere1 = new Sphere({baseC: {r:0, g:0, b:255, a:255},
+								 specularC: {r:255, g:255, b:255, a:255},
+								 transform: [[1,0,0, 2],
 											[0,1,0, 0],
 											[0,0,1, 0],
 											[0,0,0, 1]]
+								}); //Create Generic Sphere
+		var sphere2 = new Sphere({baseC: {r:0, g:0, b:255, a:255},
+								 specularC: {r:255, g:255, b:255, a:255},
+								 transform: [[1,0,0, 0],
+											[0,1,0, 2],
+											[0,0,1, 0],
+											[0,0,0, 1]]
+								}); //Create Generic Sphere
+		var sphere3 = new Sphere({baseC: {r:0, g:0, b:255, a:255},
+								 specularC: {r:255, g:255, b:255, a:255},
+								 transform: [[1,0,0, -2],
+											[0,1,0, 0],
+											[0,0,1, 0],
+											[0,0,0, 1]]
+								}); //Create Generic Sphere
+		var sphere4 = new Sphere({baseC: {r:0, g:0, b:255, a:255},
+								 specularC: {r:255, g:255, b:255, a:255},
+								 transform: [[1,0,0, 0],
+											[0,1,0, -2],
+											[0,0,1, 0],
+											[0,0,0, 1]]
+								}); //Create Generic Sphere
+
+		var plane  = new Plane({baseC: {r:100, g:100, b:100, a:255},
+								diffuseFactor: 0.8,
+								specularFactor: 0.0001,
+								reflectionFactor: 0.0001,
+								transform: [[1,0,0, 0],
+											[0,1,0, 0],
+											[0,0,1, -1],
+											[0,0,0, 1]]
 								});
-		var olight = new OmniLight({intensity:1.8,
-									source:{x:-8, y:12, z: 1, h:1}}); //Create an OmniLight
+		var olight = new OmniLight({intensity:1.0,
+									source:{x:0, y:0, z: 1, h:1}}); //Create an OmniLight
 
 		//World List
 		var world = [];
 		world.push(camera);
-		world.push(sphere);
+		world.push(sphere1);
+		world.push(sphere2);
+		world.push(sphere3);
+		world.push(sphere4);
 		world.push(plane);
 		world.push(olight);
 

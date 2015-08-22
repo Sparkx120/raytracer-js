@@ -65,8 +65,14 @@ class Ray{
 			this.e = config.e;
 			this.d = config.d;
 		}
-
 		else {throw "Error not a valid Ray Constructor"}
+
+		this.depth = config.depth;
+
+		if(config.exclusionObj)
+			this.exclusionObj = config.exclusionObj;
+		else
+			this.exclusionObj = {};
 
 		//Setup Intersect Persistance
 		this.lowestIntersectValue = 0;
@@ -82,29 +88,27 @@ class Ray{
 	 * @param {Object{t, obj}} config Intersection at position t on object obj
 	 */
 	addIntersect(config){
-		if(config.t && config.obj){
-			var dt = Math3D.scalarMultiply(this.d, config.t);
-			var intersect = Math3D.addPoints(this.e, dt);
-			// console.log("added intersect");
+		if(config.obj != this.exclusionObj)
+			if(config.t && config.obj){
+				var dt = Math3D.scalarMultiply(this.d, config.t);
+				var intersect = Math3D.addPoints(this.e, dt);
+				// console.log("added intersect");
 
-			if(!this.intersectedObject && config.t < 0){
-				this.lowestIntersectValue = config.t;
-				this.lowestIntersectObject = config.obj;
-				this.lowestIntersectPoint = intersect;
-				this.intersectedObjects.push(config.obj);
-				this.intersectedObject = true;
-			}
-			else{
-				if(config.t<this.lowestIntersectValue && config.t < 0){
+				if(!this.intersectedObject && config.t < 0){
 					this.lowestIntersectValue = config.t;
 					this.lowestIntersectObject = config.obj;
 					this.lowestIntersectPoint = intersect;
+					this.intersectedObjects.push(config.obj);
+					this.intersectedObject = true;
 				}
-			}
-
-			
-		}
-		else {throw "Not a valid addIntersect"}
+				else{
+					if(config.t>this.lowestIntersectValue && config.t < 0){
+						this.lowestIntersectValue = config.t;
+						this.lowestIntersectObject = config.obj;
+						this.lowestIntersectPoint = intersect;
+					}
+				}	
+			}else {throw "Not a valid addIntersect"}
 	}
 
 	/**

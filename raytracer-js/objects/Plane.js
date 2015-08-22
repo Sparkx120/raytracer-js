@@ -28,14 +28,14 @@ class Plane extends GenericObject{
 		//Intersection Commputation and Additions
 		if(d.z != 0){
 			var t = -(e.z/d.z);
-			if(t>0)
+			if(t<0)
 				if(!this.restricted)
-					ray.addIntersect(t, this);
+					ray.addIntersect({t:t, obj:this});
 				else{
 					var x = e.x + d.x*t;
 					var y = e.y + d.y*t;
 					if((Math.sqrt(x*x + y*y)) <= 1)
-						ray.addIntersect(t, this);
+						ray.addIntersect({t:t, obj:this});
 				}
 		}
 	}
@@ -47,7 +47,7 @@ class Plane extends GenericObject{
 	 */
 	getNormalAt(point){
 		var norm = {x:0, y:0, z:-1, h:1};
-		norm = Math3D.multiplyVectorByMatrix(norm);
+		norm = Math3D.multiplyVectorByMatrix(this.transform, norm);
 		return norm;
 	}
 

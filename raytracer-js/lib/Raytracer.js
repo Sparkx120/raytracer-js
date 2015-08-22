@@ -22,6 +22,7 @@ class Raytracer{
 		this.color = {r: 100, g: 100, b: 100, a: 255};
 
 		this.falloffFactor = 10;
+		this.recursionFactor = 4;
 
 		this.drawTitle();
 	}
@@ -92,7 +93,7 @@ class Raytracer{
 			var timeout = setInterval(()=>{
 				if(i<this.camera.y){ i++;
 					for(var j=0; j<this.camera.x; j++){
-						var ray   = new Ray({x: j, y:i, camera: this.camera});
+						var ray   = new Ray({x: j, y:i, camera: this.camera, depth: 0});
 						var color = this.raytrace(ray);
 						var pixel = color;
 						pixel.x = j;
@@ -137,21 +138,27 @@ class Raytracer{
 			var ambientFactor  = object.ambientFactor;
 			var diffuseFactor  = object.diffuseFactor;
 			var specularFactor = object.specularFactor;
+			var reflectionFactor = object.reflectionFactor;
 
 			var ambientColor   = object.ambientC;
 			var diffuseColor   = {r:0,g:0,b:0,a:0};
 			var specularColor  = {r:0,g:0,b:0,a:0};
+			var reflectionColor  = {r:0,g:0,b:0,a:0};
 
 			if(this.getLightList()){
-				diffuseColor   = this._diffuseShader(ray);
-				specularColor  = this._specularShader(ray);	
+				if(object.diffuseFactor>0)
+					diffuseColor   = this._diffuseShader(ray);
+				if(object.specularColor>0)
+					specularColor  = this._specularShader(ray);	
+				if(object.reflectionFactor>0)
+					reflectionColor  = this._reflectionShader(ray);	
 			}
 			
 
 			var computedColor = {
-				r: ambientColor.r*ambientFactor + diffuseColor.r*diffuseFactor + specularColor.r*specularFactor,
-				g: ambientColor.g*ambientFactor + diffuseColor.g*diffuseFactor + specularColor.g*specularFactor,
-				b: ambientColor.b*ambientFactor + diffuseColor.b*diffuseFactor + specularColor.b*specularFactor,
+				r: ambientColor.r*ambientFactor + diffuseColor.r*diffuseFactor + specularColor.r*specularFactor + reflectionColor.r*reflectionFactor,
+				g: ambientColor.g*ambientFactor + diffuseColor.g*diffuseFactor + specularColor.g*specularFactor + reflectionColor.g*reflectionFactor,
+				b: ambientColor.b*ambientFactor + diffuseColor.b*diffuseFactor + specularColor.b*specularFactor + reflectionColor.b*reflectionFactor,
 				a: object.opacity*255,
 			}
 
@@ -188,17 +195,23 @@ class Raytracer{
 				var v = Math3D.vectorizePoints(intersect, ray.e);
 				var ns    = Math3D.dotProduct(n, s);
 
-				//Compute Falloff from Lightsource
-				var distance = Math3D.magnitudeOfVector(s);
+				var shadowDetect = new Ray({e:intersect, d: s, exclusionObj: object});
+				this.getObjectList().map((obj)=>{
+					obj.rayIntersect(shadowDetect)
+				});	
 
-				if(distance > -1 && distance < 1)
-					distance = 1;
+				if(!shadowDetect.intersectedObject){
+					//Compute Falloff from Lightsource
+					// var distance = Math3D.magnitudeOfVector(s);
 
-				//Compute Diffuse Intensity
-				var nDots = ns/(Math3D.magnitudeOfVector(s)*Math3D.magnitudeOfVector(n));
-				var diffuseIntensity = (light.intensity*Math.max(nDots, 0))/((distance/falloffFactor)^2);
-
-				totalIntensity += diffuseIntensity;
+					//Compute Diffuse Intensity
+					var div   = Math3D.magnitudeOfVector(s)*Math3D.magnitudeOfVector(n);
+					if(div != 0){
+						var nDots = ns/(div);
+						var diffuseIntensity = (light.intensity*Math.max(nDots, 0));
+						totalIntensity += diffuseIntensity;	
+					}	
+				}
 			});
 
 		return {
@@ -224,29 +237,35 @@ class Raytracer{
 				var v = Math3D.vectorizePoints(intersect, ray.e);
 				var ns    = Math3D.dotProduct(n, s);
 
-				var magN  = Math3D.magnitudeOfVector(n);
-				var coeff = 2*((ns/(magN*magN)));
-				
-				var r = Math3D.addVectors(
-						Math3D.scalarMultiply(s, -1.0),
-						Math3D.scalarMultiply(n, coeff)
-					);
+				var shadowDetect = new Ray({e:intersect, d: s, exclusionObj: object});
+				this.getObjectList().map((obj)=>{
+					obj.rayIntersect(shadowDetect)
+				});	
+				if(!shadowDetect.intersectedObject){
+						var magN  = Math3D.magnitudeOfVector(n);
+					var coeff = 2*((ns/(magN*magN)));
+					
+					var r = Math3D.addVectors(
+							Math3D.scalarMultiply(s, -1.0),
+							Math3D.scalarMultiply(n, coeff)
+						);
 
-				var f = object.specularFalloff;
+					var f = object.specularFalloff;
 
-				//Compute Falloff from Lightsource
-				var distance = Math3D.magnitudeOfVector(s);
+					//Compute Falloff from Lightsource
+					// var distance = Math3D.magnitudeOfVector(s);
 
-				if(distance > -1 && distance < 1)
-					distance = 1;
+					// if(distance < 1)
+					// 	distance = 1;
 
-				//Compute Specular Intensity
-				var specularIntensity = 0;
-				var vDotr = Math3D.dotProduct(v, r)/(Math3D.magnitudeOfVector(v)*Math3D.magnitudeOfVector(r));
-				if(vDotr > 0)
-					specularIntensity = (light.intensity*Math.max(Math.pow(vDotr,f), 0))/((distance/falloffFactor/50)^2);
+					//Compute Specular Intensity
+					var specularIntensity = 0;
+					var vDotr = Math3D.dotProduct(v, r)/(Math3D.magnitudeOfVector(v)*Math3D.magnitudeOfVector(r));
+					if(vDotr > 0)
+						specularIntensity = (light.intensity*Math.max(Math.pow(vDotr,f), 0));
 
-				totalIntensity += specularIntensity;
+					totalIntensity += specularIntensity;	
+				}
 			});
 
 		return {
@@ -254,5 +273,29 @@ class Raytracer{
 			g:object.specularC.g*totalIntensity,
 			b:object.specularC.b*totalIntensity,
 			a:255}
+	}
+
+	_reflectionShader(ray){
+		var object        = ray.lowestIntersectObject;
+		var intersect     = ray.lowestIntersectPoint;
+		var norm          = object.getNormalAt(intersect);
+
+		var iDotn = Math3D.dotProduct(Math3D.normalizeVector(ray.d), Math3D.normalizeVector(norm));
+		if((object.reflectionFactor > 0) && ray.depth < this.recursionFactor && iDotn < 0){
+			//Reflection Vector
+			var coeff = -2*(iDotn);
+			var reflectionD = Math3D.scalarMultiply(norm, coeff);
+			reflectionD = Math3D.normalizeVector(reflectionD);
+
+			var incident = new Ray({e:intersect, d:reflectionD, depth: ray.depth+1, exclusionObj: object});	
+			var reflection = this.raytrace(incident); //uses incident object detection aka this obj
+			return {
+			r:reflection.r,
+			g:reflection.g,
+			b:reflection.b,
+			a:255}
+		}
+
+		return this.backgroundColor;
 	}
 }

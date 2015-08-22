@@ -21,6 +21,7 @@ class Sphere extends GenericObject{
 		var dRay = ray.d;
 		var e = Math3D.multiplyVectorByMatrix(this.transformInverse, eRay);
 		var d = Math3D.multiplyVectorByMatrix(this.transformInverse, dRay);
+		//d = Math3D.scalarMultiply(d, -1);
 	    var eVec = {x:e.x, y:e.y, z:e.z, h:0};
 
 		//define Spherical Geometry Intersection here
@@ -61,7 +62,7 @@ class Sphere extends GenericObject{
 	 */
 	getNormalAt(point){
 		var p = Math3D.multiplyVectorByMatrix(this.transformInverse, point);
-		var norm = {x:p.x, y:p.y, z:p.z, h:0};
+		var norm = {x:-p.x, y:-p.y, z:-p.z, h:0};
 		norm = Math3D.normalizeVector(norm);
 		norm = Math3D.multiplyVectorByMatrix(this.transform, norm);
 		return norm;
