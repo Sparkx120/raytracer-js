@@ -84,11 +84,11 @@ class Ray{
 	}
 
 	/**
-	 * Adds an intersection ot the ray.
+	 * Adds an intersection on the ray.
 	 * @param {Object{t, obj}} config Intersection at position t on object obj
 	 */
 	addIntersect(config){
-		if(config.obj != this.exclusionObj)
+		if(config.obj != this.exclusionObj && config.t != 0) //Skip 0
 			if(config.t && config.obj){
 				var dt = Math3D.scalarMultiply(this.d, config.t);
 				var intersect = Math3D.addPoints(this.e, dt);

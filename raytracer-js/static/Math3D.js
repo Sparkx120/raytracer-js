@@ -16,13 +16,50 @@
  */
 function Math3D(){};
 
+Math3D.transformPipe = function(matrixPipe){
+	var data = Matrices3D.I;
+
+	for(let i=0; i<matrixPipe.length; i++){
+		data = Math3D.multiplyMatrices(
+			data,
+			matrixPipe[i]
+		);
+	}
+
+	return data;
+}
+
+Math3D.scale = function(xf, yf, zf){
+	var data = Math3D.initMatrix(4,4);
+
+	//Setup Scale Matrix
+	data[0][0] = xf;	data[0][1] = 0;		data[0][2] = 0;		data[0][3] = 0;
+	data[1][0] = 0;		data[1][1] = yf;	data[1][2] = 0;		data[1][3] = 0;
+	data[2][0] = 0;		data[2][1] = 0;		data[2][2] = zf;	data[2][3] = 0;
+	data[3][0] = 0;		data[3][1] = 0;		data[3][2] = 0;		data[3][3] = 1;
+
+	return data;
+}
+
+Math3D.translate = function(x, y, z){
+	var data = Math3D.initMatrix(4,4);
+
+	//Setup Scale Matrix
+	data[0][0] = 1;		data[0][1] = 0;		data[0][2] = 0;		data[0][3] = x;
+	data[1][0] = 0;		data[1][1] = 1;		data[1][2] = 0;		data[1][3] = y;
+	data[2][0] = 0;		data[2][1] = 0;		data[2][2] = 1;		data[2][3] = z;
+	data[3][0] = 0;		data[3][1] = 0;		data[3][2] = 0;		data[3][3] = 1;
+
+	return data;
+}
+
 Math3D.rotateOnArbitrary = function(deg, axis){
 	//Preconfig
 	var cos = Math.cos((Math.PI/180)*deg);
 	var sin = Math.sin((Math.PI/180)*deg);
 	var v = Math3D.normalizeVector(axis);
 	
-	var data = new Number[4][4];
+	var data = Math3D.initMatrix(4,4);
 	
 	//Setup Jv Matrix
 	data[0][0] = 0;			data[0][1] = -v.z();	data[0][2] = v.y();		data[0][3] = 0;
@@ -37,7 +74,7 @@ Math3D.rotateOnArbitrary = function(deg, axis){
 							data, 
 							sin)), 
 						Math3D.scalarMultiplyMatrix(
-							Math3D.multiplyMatrixWithMatrix(
+							Math3D.multiplyMatrices(
 								data,
 								data),
 							 1-cos));

@@ -124,12 +124,19 @@ class Raytracer{
 
 	
 
-	raytrace(ray){
+	raytrace(ray, recursion, objR){
+		if(recursion && recusion > this.recursionFactor) return {r:0, g:0, b:0, a:0};
+
 		var objList   = this.getObjectList();
 		var lightList = this.getLightList();
 
 		objList.map((obj)=>{
-			obj.rayIntersect(ray);
+			if(objR){ //Don't intersect with self surface under recursion
+				if(objR != obj) obj.rayIntersect(ray);
+			}
+			else{
+				obj.rayIntersect(ray);
+			}
 		});
 
 		if(ray.intersectedObject){
@@ -139,26 +146,31 @@ class Raytracer{
 			var diffuseFactor  = object.diffuseFactor;
 			var specularFactor = object.specularFactor;
 			var reflectionFactor = object.reflectionFactor;
+			var refractionFactor = object.refractionFactor;
 
 			var ambientColor   = object.ambientC;
 			var diffuseColor   = {r:0,g:0,b:0,a:0};
 			var specularColor  = {r:0,g:0,b:0,a:0};
 			var reflectionColor  = {r:0,g:0,b:0,a:0};
+			var refractionColor = {r:0,g:0,b:0,a:0};
 
 			if(this.getLightList()){
 				if(object.diffuseFactor>0)
 					diffuseColor   = this._diffuseShader(ray);
-				if(object.specularColor>0)
+				if(object.specularFactor>0)
 					specularColor  = this._specularShader(ray);	
 				if(object.reflectionFactor>0)
-					reflectionColor  = this._reflectionShader(ray);	
+					reflectionColor  = this._reflectionShader(ray);
+				if(object.refractionFactor>0){
+					refractionColor = this._refractionShader(ray, recursion);
+				}
 			}
 			
 
 			var computedColor = {
-				r: ambientColor.r*ambientFactor + diffuseColor.r*diffuseFactor + specularColor.r*specularFactor + reflectionColor.r*reflectionFactor,
-				g: ambientColor.g*ambientFactor + diffuseColor.g*diffuseFactor + specularColor.g*specularFactor + reflectionColor.g*reflectionFactor,
-				b: ambientColor.b*ambientFactor + diffuseColor.b*diffuseFactor + specularColor.b*specularFactor + reflectionColor.b*reflectionFactor,
+				r: ambientColor.r*ambientFactor + diffuseColor.r*diffuseFactor + specularColor.r*specularFactor + reflectionColor.r*reflectionFactor + refractionColor.r*refractionFactor,
+				g: ambientColor.g*ambientFactor + diffuseColor.g*diffuseFactor + specularColor.g*specularFactor + reflectionColor.g*reflectionFactor + refractionColor.g*refractionFactor,
+				b: ambientColor.b*ambientFactor + diffuseColor.b*diffuseFactor + specularColor.b*specularFactor + reflectionColor.b*reflectionFactor + refractionColor.b*refractionFactor,
 				a: object.opacity*255,
 			}
 
@@ -230,7 +242,6 @@ class Raytracer{
 		var intensities      = [];
 		var unShadowedLights = 0;
 		var totalIntensity   = 0;
-
 		if(this.getLightList())
 			this.getLightList().map((light, index, lights)=>{
 				var s = Math3D.vectorizePoints(intersect, light.source);
@@ -242,7 +253,7 @@ class Raytracer{
 					obj.rayIntersect(shadowDetect)
 				});	
 				if(!shadowDetect.intersectedObject){
-						var magN  = Math3D.magnitudeOfVector(n);
+					var magN  = Math3D.magnitudeOfVector(n);
 					var coeff = 2*((ns/(magN*magN)));
 					
 					var r = Math3D.addVectors(
@@ -261,13 +272,17 @@ class Raytracer{
 					//Compute Specular Intensity
 					var specularIntensity = 0;
 					var vDotr = Math3D.dotProduct(v, r)/(Math3D.magnitudeOfVector(v)*Math3D.magnitudeOfVector(r));
-					if(vDotr > 0)
+					if(vDotr > 0){
 						specularIntensity = (light.intensity*Math.max(Math.pow(vDotr,f), 0));
+					}
 
-					totalIntensity += specularIntensity;	
+					totalIntensity = totalIntensity + specularIntensity;	
 				}
 			});
-
+		// if(totalIntensity > 0){
+		// 	console.log(totalIntensity);
+		// }
+		
 		return {
 			r:object.specularC.r*totalIntensity,
 			g:object.specularC.g*totalIntensity,
@@ -297,5 +312,50 @@ class Raytracer{
 		}
 
 		return this.backgroundColor;
+	}
+
+	_refractionShader(ray, recursion){
+		var object        = ray.lowestIntersectObject;
+		var intersect     = ray.lowestIntersectPoint;
+		var norm          = object.getNormalAt(intersect);
+		
+		//Refraction Vector (assuming transitions with air)
+		//Based on math from http://graphics.stanford.edu/courses/cs148-10-summer/docs/2006--degreve--reflection_refraction.pdf
+		//Based on Derivation from http://www.starkeffects.com/snells-law-vector.shtml
+		var nTheta = Math3D.dotProduct(Math3D.normalizeVector(Math3D.scalarMultiply(ray.d, 1)), Math3D.normalizeVector(norm));
+		var cosNTheta = nTheta;//(float) Math.cos(nTheta);
+		var refractionIndex = object.refractionIndex;
+
+		//start with white
+		var refraction = {r: 255, g: 255, b:255, a: 255}
+
+		if(object.refractionIndex > 0.0){
+			//Do Refraction Angle Computation
+			var nCrossD = Math3D.crossProduct(norm, ray.d);
+			var i = Math3D.crossProduct(norm, Math3D.crossProduct(Math3D.scalarMultiply(norm, -1), ray.d));
+			i = Math3D.scalarMultiply(i, refractionIndex);
+			var nDotn = Math3D.dotProduct(nCrossD, nCrossD);
+			var coeff = Math.sqrt(1-refractionIndex*refractionIndex*nDotn);
+			var j = Math3D.scalarMultiply(norm, coeff);
+			var refractionD = Math3D.normalizeVector(Math3D.vectorizePoints(i, j));
+			
+			//Create Refraction Ray
+			var refracted = new Ray({e:ray.e, d:refractionD});
+			
+			//Run Recursive RayTrace
+			object.rayIntersect(refracted);
+			if(refracted.intersectedObject)
+				refracted = new Ray({e:refracted.lowestIntersectPoint, d:ray.d});
+			
+			refraction = this.raytrace(refracted, recursion+1, object); //Detect object
+			
+		}
+				
+		
+		return {
+			r:refraction.r,
+			g:refraction.g,
+			b:refraction.b,
+			a:255}
 	}
 }

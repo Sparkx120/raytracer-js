@@ -13,7 +13,7 @@ class GenericObject{
 				this[key] = config[key];
 
 		if(!this.baseC)
-			this.baseC = {r:100, g:100, b:100, a:255};
+			this.baseC = {r:255, g:255, b:255, a:255};
 		if(!this.ambientC)
 			this.ambientC = this.baseC;
 		if(!this.diffuseC)
@@ -22,19 +22,19 @@ class GenericObject{
 			this.specularC = this.baseC;
 
 		if(!this.ambientFactor)
-			this.ambientFactor = 0.1;
+			this.ambientFactor = 0.0;
 		if(!this.diffuseFactor)
-			this.diffuseFactor = 0.75;
+			this.diffuseFactor = 0.2;
 		if(!this.specularFactor)
 			this.specularFactor = 0.9;
 		if(!this.reflectionFactor)
-			this.reflectionFactor = 0.4;
+			this.reflectionFactor = 0.9;
 		if(!this.refractionFactor)
 			this.refractionFactor = 0.0;
 		if(!this.specularFalloff)
-			this.specularFalloff = 50.0;
+			this.specularFalloff = 40;
 		if(!this.refractionIndex)
-			this.refractionIndex = 1.4;
+			this.refractionIndex = 1.0;
 
 		if(!this.opacity)
 			this.opacity = 1.0;
