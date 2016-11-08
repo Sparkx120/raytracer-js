@@ -17,14 +17,13 @@ DRIVER = $(ROOT)/driver.js
 
 ES6C = babel
 
-CLOSURE_CONF = --language_in=ECMASCRIPT5
+CLOSURE_CONF = --language_in=ECMASCRIPT6
 
 es6:
 	$(ES6C) $(STATIC_LIBS) $(LIBS) $(OBJECTS) $(DRIVER) > precomp1.js
-	#cat precomp1.js | perl -pe 's/(?!^)\"use strict\"; //g' > precomp2.js
 
 closure: es6
-	java -jar ./closure/compiler.jar $(CLOSURE_CONF) --js precomp1.js --js_output_file ./js/Raytracer.js 2>/dev/null
+	java -jar ./closure/compiler.jar $(CLOSURE_CONF) --js precomp1.js --js_output_file ./js/Raytracer.js 2> build_log.log
 
 
 build: closure
@@ -32,5 +31,4 @@ build: closure
 release: build clean
 
 clean:
-	rm precomp1.js
-	rm precomp2.js
+	rm ./precomp1.js

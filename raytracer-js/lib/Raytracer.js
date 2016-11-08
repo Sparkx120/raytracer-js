@@ -201,7 +201,7 @@ class Raytracer{
 		var unShadowedLights = 0;
 		var totalIntensity   = 0;
 
-		if(this.getLightList())
+		if(this.getLightList()){
 			this.getLightList().map((light, index, lights)=>{
 				var s = Math3D.vectorizePoints(intersect, light.source);
 				var v = Math3D.vectorizePoints(intersect, ray.e);
@@ -225,6 +225,7 @@ class Raytracer{
 					}	
 				}
 			});
+		}
 
 		return {
 			r:object.diffuseC.r*totalIntensity,
@@ -242,7 +243,7 @@ class Raytracer{
 		var intensities      = [];
 		var unShadowedLights = 0;
 		var totalIntensity   = 0;
-		if(this.getLightList())
+		if(this.getLightList()){
 			this.getLightList().map((light, index, lights)=>{
 				var s = Math3D.vectorizePoints(intersect, light.source);
 				var v = Math3D.vectorizePoints(intersect, ray.e);
@@ -282,7 +283,7 @@ class Raytracer{
 		// if(totalIntensity > 0){
 		// 	console.log(totalIntensity);
 		// }
-		
+		}
 		return {
 			r:object.specularC.r*totalIntensity,
 			g:object.specularC.g*totalIntensity,
