@@ -78,19 +78,27 @@ class Raytracer{
 		return this.world.filter((elem) => elem instanceof Light);
 	}
 
+	stop(){
+		if(this.timeint){
+			console.log("killing render");
+			clearInterval(this.timeint);
+			this.timeint = null;
+		}
+	}
+
 	render(){
 		this.drawRenderingPlaceholder();
 
-		//Give canvas time to update
-		setTimeout(()=>{
+		//Give canvas async time to update
+		var renderLoop = setTimeout(()=>{
 			this.pixelRenderer.clearBuffer();
 			this.camera.width = this.pixelRenderer.width;
 			this.camera.height = this.pixelRenderer.height;
 			this.camera.setupVectors();
 
-			//Run outerloop in timeout so canvas can live update
+			//Run outerloop in interval so canvas can live update
 			var i = 0;
-			var timeout = setInterval(()=>{
+			this.timeint = setInterval(()=>{
 				if(i<this.camera.y){ i++;
 					for(var j=0; j<this.camera.x; j++){
 						var ray   = new Ray({x: j, y:i, camera: this.camera, depth: 0});
@@ -115,11 +123,12 @@ class Raytracer{
 						this.progress = null;
 					}
 					// this.pixelRenderer.flushBuffer();
-					clearTimeout(timeout);}
-			}, 1);
+					clearInterval(this.timeint);
+				}
+			}, 0);
 
 			
-		},10);
+		},0);
 	}
 
 	

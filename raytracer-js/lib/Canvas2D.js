@@ -19,7 +19,7 @@ class Canvas2D{
 		this.canvas.style.position    = "absolute";
 		this.container.style.margin   = "5%";
 		this.container.style.width    = "90%";
-		this.container.style.height   = window.innerHeight*0.8 + "px";
+		this.container.style.height   = "75vh";
 		this.container.style.position = "relative";
 		this.context = this.canvas.getContext('2d');
 		this.container.appendChild(this.canvas);
