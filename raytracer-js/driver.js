@@ -21,13 +21,28 @@
 		var world = [];
 		world.push(camera);
 
-		var scale = 0.1;
-		var scaleF = 0.01;
-		var jitter = 0.1
+		// var scale = 0.1;
+		// var scaleF = 0.01;
+		// var jitter = 0.1
+		// var xsphere = 0.5;
+		// var ysphere = 0.5;
+		// var zsphere = 1;
+		// var fsphere = 0.25;
+
+		//Scale of Sphere
+		var scale = 0.2;
+		//Scale of jitter of scale
+		var scaleF = 0.0;
+		//Spatial Jitter
+		var jitter = 0;
+		//Size of x in +/-0
 		var xsphere = 0.5;
+		//Size of y in +/-0
 		var ysphere = 0.5;
+		//Size of z in 0+
 		var zsphere = 1;
-		var fsphere = 0.25;
+		//Step in x,y,z
+		var fsphere = 0.5;
 
 		for(var i=-xsphere; i<=xsphere; i=i+fsphere){
 			for(var j=-ysphere; j<=ysphere; j=j+fsphere){
@@ -65,6 +80,14 @@
 
 		world.push(plane);
 		world.push(olight);
+		world.push(new OmniLight({intensity:1.0,
+									source:{x:0, y:8, z: 1, h:1}}),
+				   new OmniLight({intensity:1.0,
+									source:{x:0, y:-8, z: 1, h:1}}),
+				   new OmniLight({intensity:1.0,
+									source:{x:8, y:0, z: 1, h:1}})),
+				   new OmniLight({intensity:1.0,
+									source:{x:-8, y:0, z: 1, h:1}})
 
 		var raytracer = new Raytracer({
 			world: world,
