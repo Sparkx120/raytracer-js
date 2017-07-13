@@ -41,7 +41,7 @@ class Raytracer{
 		ctx.fillText('Raytracer-JS', x, y1);
 
 		ctx.font = '15pt Helvetica,Arial,sans-serif';
-		ctx.fillText('Version 0.0.1 By SparkX120', x, y2);
+		ctx.fillText('Version 0.0.2 By SparkX120', x, y2);
 
 	}
 

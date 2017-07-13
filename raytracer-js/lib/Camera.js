@@ -5,7 +5,7 @@
  * @param {Object} config Configuration Object (width height viewingAngle world position gaze point)
  *
  * @author  James Wake (Sparkx120)
- * @version 1.0 (2015/08)
+ * @version 1.1 (2015/08)
  * @license MIT
  */
 class Camera{
@@ -51,9 +51,9 @@ class Camera{
 			this.n = Math3D.scalarMultiply(nP, nPmag);
 
 			//Compute Vector u (+y axis = up)
-			var pP = {x:0, y:1, z:0, h:0};
+			var pP = {x:0, y:0, z:1, h:0};
 			this.u = Math3D.crossProduct(pP, this.n);
-			this.u = Math3D.scalarMultiply(this.u,-1);
+			//this.u = Math3D.scalarMultiply(this.u,-1);
 
 			//Compute Vector v
 			this.v = Math3D.crossProduct(this.n, this.u);

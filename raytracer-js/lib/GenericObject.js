@@ -26,7 +26,7 @@ class GenericObject{
 		if(!this.diffuseFactor)
 			this.diffuseFactor = 0.2;
 		if(!this.specularFactor)
-			this.specularFactor = 0.9;
+			this.specularFactor = 0.5;
 		if(!this.reflectionFactor)
 			this.reflectionFactor = 0.9;
 		if(!this.refractionFactor)

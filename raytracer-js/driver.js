@@ -7,12 +7,12 @@
 		//Camera
 		var camera = new Camera({
 			position:     {x:2, y:2, z:2, h:1},
-			gaze:         {x:0, y:0,  z:0.5, h:1},
+			gaze:         {x:0, y:0,  z:0, h:1},
 			width:        canvas2D.width,
 			height:       canvas2D.height,
 			viewingAngle: 60,
 			world:        null,
-			noPipe:       false
+			noPipe:       true
 		});
 
 		//Scene Object Defs
@@ -30,43 +30,58 @@
 		// var fsphere = 0.25;
 
 		//Scale of Sphere
-		var scale = 0.2;
+		let scale = 0.2;
 		//Scale of jitter of scale
-		var scaleF = 0.0;
+		let scaleF = 0.0;
 		//Spatial Jitter
-		var jitter = 0;
+		let jitter = 0;
 		//Size of x in +/-0
-		var xsphere = 0.5;
+		let xsphere = 0.5;
 		//Size of y in +/-0
-		var ysphere = 0.5;
+		let ysphere = 0.5;
 		//Size of z in 0+
-		var zsphere = 1;
+		let zsphere = 1;
 		//Step in x,y,z
-		var fsphere = 0.5;
+		let fsphere = 0.5;
 
-		for(var i=-xsphere; i<=xsphere; i=i+fsphere){
-			for(var j=-ysphere; j<=ysphere; j=j+fsphere){
-				for(var k=0; k<=zsphere; k=k+fsphere){
+		for(let i=-xsphere; i<=xsphere; i=i+fsphere){
+			for(let j=-ysphere; j<=ysphere; j=j+fsphere){
+				for(let k=0; k<=zsphere; k=k+fsphere){
 					console.log("Making sphere at x:" + i + " y:" + j);
 
-					var sfact = scale*((Math.random()*scaleF)+(1-scaleF));
-					var x = i + (Math.random()*jitter-jitter);
-					var y = j + (Math.random()*jitter-jitter);
-					var z = k + (Math.random()*jitter-jitter);
+					let sfact = scale*((Math.random()*scaleF)+(1-scaleF));
+					let x = i + (Math.random()*jitter-jitter);
+					let y = j + (Math.random()*jitter-jitter);
+					let z = k + (Math.random()*jitter-jitter);
 					let pipe = [
 						Math3D.translate(x, y, z),
 						Math3D.scale(sfact, sfact, sfact)
 					];
-					let mat = Math3D.transformPipe(pipe);
-					console.log(mat);
+					// let mat = Math3D.transformPipe(pipe);
+					// console.log(mat);
 
-					world.push(new Sphere({baseC: {r:0, g:0, b:255, a:255},
+					world.push(new Sphere({
+						baseC: {r:0, g:0, b:255, a:255},
 						specularC: {r:255, g:255, b:255, a:255},
-						transform: mat
+						transform: Math3D.transformPipe(pipe)
 					})); //Create Generic Sphere
 				}
 			}
 		}
+
+		// world.push(new Sphere({
+		// 	baseC: {r:0, g:0, b:255, a:255},
+		// 	specularC: {r:255, g:255, b:255, a:255},
+		// 	transform: Math3D.translate(2, 2, 0.5)
+		// })); //Create Generic Sphere
+		// world.push(new Sphere({
+		// 	baseC: {r:0, g:0, b:255, a:255},
+		// 	specularC: {r:255, g:255, b:255, a:255},
+		// 	transform: Math3D.transformPipe([
+		// 				Math3D.translate(-1, -1, 0.5),
+		// 				Math3D.scale(0.5, 0.5, 0.5)
+		// 			])
+		// })); //Create Generic Sphere
 
 		var plane = new Plane({baseC: {r:100, g:100, b:100, a:255},
 								diffuseFactor: 0.8,
@@ -85,9 +100,9 @@
 				   new OmniLight({intensity:1.0,
 									source:{x:0, y:-8, z: 1, h:1}}),
 				   new OmniLight({intensity:1.0,
-									source:{x:8, y:0, z: 1, h:1}})),
+									source:{x:8, y:0, z: 1, h:1}}),
 				   new OmniLight({intensity:1.0,
-									source:{x:-8, y:0, z: 1, h:1}})
+									source:{x:-8, y:0, z: 1, h:1}}))
 
 		var raytracer = new Raytracer({
 			world: world,
