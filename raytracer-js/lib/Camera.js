@@ -1,3 +1,5 @@
+import {Math3D, Matrices3D} from "./Math3D";
+
 /**
  * The Camera Object (Now in ES6)
  * @class Camera Object
@@ -8,7 +10,7 @@
  * @version 1.1 (2015/08)
  * @license MIT
  */
-class Camera{
+export class Camera{
 		constructor(config){
 		//Camera Specific Points and Vectors
 		/**

@@ -1,3 +1,6 @@
+import {GenericObject} from "./GenericObject.js";
+import {Math3D, Matrices3D} from "../lib";
+
 /**
  * Plane is a Generic Object Plane Definition for Raytracer-JS (Now in ES6)
  * @class  Plane
@@ -6,7 +9,7 @@
  * @version 0.1 (2015/08)
  * @license MIT
  */
-class Plane extends GenericObject{
+export class Plane extends GenericObject{
 	constructor(config){
 		super(config);
 		if(config.restricted)

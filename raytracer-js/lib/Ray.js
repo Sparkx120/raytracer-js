@@ -1,3 +1,5 @@
+import {Math3D, Matrices3D} from "./Math3D.js";
+
 /**
  * Ray Object to contain data for a Ray Intersect List (Now in ES6)
  * @class  Ray
@@ -7,7 +9,7 @@
  * @version 0.1 (2015/08)
  * @license MIT
  */
-class Ray{
+export class Ray{
 	constructor(config){
 		//Camera Config Constructor
 		if(config.camera){

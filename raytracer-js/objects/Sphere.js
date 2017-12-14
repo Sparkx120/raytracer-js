@@ -1,4 +1,7 @@
-/**
+import {GenericObject} from "./GenericObject.js";
+import {Math3D, Matrices3D} from "../lib";
+
+/**import {Math3D, Matricies3D} from "../static/Math3D.js";
  * Sphere is a Generic Object Sphere Definition for Raytracer-JS (Now in ES6)
  * @class  Sphere
  * 
@@ -6,7 +9,7 @@
  * @version 0.1 (2015/08)
  * @license MIT
  */
-class Sphere extends GenericObject{
+export class Sphere extends GenericObject{
 	constructor(config){
 		super(config);
 	}
