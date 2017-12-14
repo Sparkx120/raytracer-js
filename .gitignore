@@ -1,3 +1,5 @@
+node_modules/
+npm-debug.log
 !./js/Raytracer.js
 !precomp*
 build_log.log

@@ -1,0 +1,3 @@
+[submodule "canvas-2d-framework"]
+	path = canvas-2d-framework
+	url = git@github.com:Sparkx120/canvas-2d-framework.git

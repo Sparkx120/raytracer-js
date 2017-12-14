@@ -1,0 +1,45 @@
+{
+  "name": "raytracer-js",
+  "version": "1.0.0",
+  "description": "A Raytracing Library written entirely in ES6",
+  "main": "index.js",
+  "scripts": {
+    "build-static": "browserify index.js -o raytracer.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Sparkx120/raytracer-js.git"
+  },
+  "keywords": [
+    "Raytracer",
+    "Raytracing",
+    "GL",
+    "Graphics"
+  ],
+  "author": "SparkX120 (James Wake)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Sparkx120/raytracer-js/issues"
+  },
+  "homepage": "https://github.com/Sparkx120/raytracer-js#readme",
+  "browserify": {
+    "transform": [
+      [
+        "babelify",
+        {
+          "presets": [
+            "es2015"
+          ]
+        }
+      ]
+    ]
+  },
+  "dependencies": {
+    "babel-core": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "babelify": "^8.0.0",
+    "browserify": "^14.5.0",
+    "canvas-2d-framework": "file:canvas-2d-framework"
+  }
+}
