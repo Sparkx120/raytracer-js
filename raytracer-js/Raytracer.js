@@ -72,7 +72,7 @@ export default class Raytracer{
 		this.progress.style.height          = "3em";
 		this.progress.style.bottom          = "50%";
 		this.progress.style.position        = "absolute";
-		this.progress.style.border          = "1px solid black";
+		// this.progress.style.border          = "1px solid black";
 		this.progress.className             = "prog";
 
 		if(this.pixelRenderer.container)

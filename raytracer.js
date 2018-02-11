@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
 "use strict";
 
 var _index = require("./raytracer-js/index.js");
@@ -260,7 +260,7 @@ var Raytracer = function () {
 			this.progress.style.height = "3em";
 			this.progress.style.bottom = "50%";
 			this.progress.style.position = "absolute";
-			this.progress.style.border = "1px solid black";
+			// this.progress.style.border          = "1px solid black";
 			this.progress.className = "prog";
 
 			if (this.pixelRenderer.container) this.pixelRenderer.container.appendChild(this.progress);
@@ -601,11 +601,12 @@ function init() {
 	//Canvas
 	window.canvas2D = new _canvas2dFramework2.default({
 		containerStyle: {
-			margin: "5%",
-			width: "90%",
-			height: "75vh",
-			position: "absolute",
-			border: '1px solid #AAA'
+			left: "0px",
+			right: "0px",
+			margin: "0px",
+			width: "100%",
+			height: "100%",
+			position: "absolute"
 		}
 	});
 

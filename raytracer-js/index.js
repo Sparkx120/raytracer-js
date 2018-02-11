@@ -7,9 +7,11 @@ export default function init(){
 	//Canvas
 	window.canvas2D = new Canvas2D({
 		containerStyle: {
-			margin: "5%",
-			width: "90%",
-			height: "75vh",
+			left: "0px",
+			right: "0px",
+			margin: "0px",
+			width: "100%",
+			height: "100%",
 			position: "absolute",
 		}
 	});
