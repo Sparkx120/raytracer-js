@@ -254,9 +254,10 @@ var Raytracer = function () {
 			this.progress = document.createElement("progress");
 			this.progress.max = 100;
 			this.progress.value = 0;
-			this.progress.style.left = '0%';
+			this.progress.style.left = '2.5%';
 			this.progress.style.zindex = "99";
-			this.progress.style.width = "100%";
+			this.progress.style.width = "95%";
+			this.progress.style.margin = "0px";
 			this.progress.style.height = "3em";
 			this.progress.style.bottom = "50%";
 			this.progress.style.position = "absolute";
@@ -601,12 +602,16 @@ function init() {
 	//Canvas
 	window.canvas2D = new _canvas2dFramework2.default({
 		containerStyle: {
-			left: "0px",
-			right: "0px",
-			margin: "0px",
-			width: "100%",
-			height: "100%",
-			position: "absolute"
+			margin: "0%",
+			width: "100vw",
+			height: "calc(100vh - 2px)",
+			position: "relative"
+		},
+		canvasStyle: {
+			margin: "0%",
+			width: "100vw",
+			height: "calc(100vh - 5px)",
+			position: "relative"
 		}
 	});
 

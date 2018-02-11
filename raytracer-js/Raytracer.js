@@ -66,9 +66,10 @@ export default class Raytracer{
 		this.progress       = document.createElement("progress");
 		this.progress.max   = 100;
 		this.progress.value = 0;
-		this.progress.style.left 			= '0%';
+		this.progress.style.left 			= '2.5%';
 		this.progress.style.zindex          = "99";
-		this.progress.style.width           = "100%";
+		this.progress.style.width           = "95%";
+		this.progress.style.margin          = "0px";
 		this.progress.style.height          = "3em";
 		this.progress.style.bottom          = "50%";
 		this.progress.style.position        = "absolute";

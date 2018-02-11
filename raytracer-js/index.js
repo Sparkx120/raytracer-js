@@ -6,13 +6,17 @@ import {Camera, Math3D, Matrices3D} from "./lib";
 export default function init(){
 	//Canvas
 	window.canvas2D = new Canvas2D({
-		containerStyle: {
-			left: "0px",
-			right: "0px",
-			margin: "0px",
-			width: "100%",
-			height: "100%",
-			position: "absolute",
+		containerStyle:{
+			margin   : "0%",
+			width    : "100vw",
+			height   : "calc(100vh - 2px)",
+			position : "relative"
+		},
+		canvasStyle:{
+			margin   : "0%",
+			width    : "100vw",
+			height   : "calc(100vh - 5px)",
+			position : "relative"
 		}
 	});
 
