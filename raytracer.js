@@ -1,15 +1,4 @@
-(function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
-"use strict";
-
-var _index = require("./raytracer-js/index.js");
-
-var _index2 = _interopRequireDefault(_index);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-(0, _index2.default)();
-
-},{"./raytracer-js/index.js":4}],2:[function(require,module,exports){
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -39,7 +28,9 @@ var Canvas2D = function () {
 		//Create the Canvas and Deploy it
 		this.container = document.createElement('div');
 		this.canvas = document.createElement('canvas');
+		this.bufferedImage = document.createElement('canvas');
 
+		//Get Supersampling and Style configurations
 		if (config && config.supersampling) this.supersampling = config.supersampling;else this.supersampling = 1.0;
 
 		if (config.canvasStyle) {
@@ -47,7 +38,6 @@ var Canvas2D = function () {
 				this.canvas.style[i] = config.canvasStyle[i];
 			}
 		}
-
 		if (config.containerStyle) {
 			for (var _i in config.containerStyle) {
 				this.container.style[_i] = config.containerStyle[_i];
@@ -59,21 +49,18 @@ var Canvas2D = function () {
 			this.container.style.position = "relative";
 		}
 
+		//Setup Contexts
 		this.context = this.canvas.getContext('2d');
-		this.container.appendChild(this.canvas);
+		this.bufferedContext = this.bufferedImage.getContext('2d');
 
+		//Compose the container and put into the document
+		this.container.appendChild(this.canvas);
 		document.body.appendChild(this.container);
 
 		//Positioning and Scaling
 		this.rect = this.container.getBoundingClientRect();
-		//TODO Remove Dependency on jQuery
-		$(window).on('resize', function (event) {
-			_this.rect = _this.container.getBoundingClientRect();
-			_this.canvas.width = _this.rect.width;
-			_this.canvas.height = _this.rect.height;
-			_this.width = _this.rect.width;
-			_this.height = _this.rect.height;
-			_this.buffer = _this.context.createImageData(_this.width * _this.supersampling, _this.height * _this.supersampling);
+		window.addEventListener('resize', function (event) {
+			_this.setSupersampling(_this.supersampling);
 			if (_this.resizeCB) {
 				_this.resizeCB();
 			}
@@ -82,30 +69,53 @@ var Canvas2D = function () {
 		this.canvas.height = this.rect.height;
 		this.width = this.rect.width;
 		this.height = this.rect.height;
+
 		//Persistant Pixel Image Data Object
 		this.pixelImageData = this.context.createImageData(1, 1);
 		this.buffer = this.context.createImageData(this.width, this.height);
-		// console.log(this);
-		// this.pixelData = this.pixelImageData.data
 	}
+
+	/**
+  * Set a supersampling factor for the buffered canvas (access super sample width and height via getWidth and getHeight)
+  * @param {*} supersampling - The supersampling factor to use
+  */
+
 
 	_createClass(Canvas2D, [{
 		key: 'setSupersampling',
 		value: function setSupersampling(supersampling) {
+			//Compute Dimensions to use
 			this.supersampling = supersampling;
 			this.rect = this.canvas.getBoundingClientRect();
 			this.canvas.width = this.rect.width;
 			this.canvas.height = this.rect.height;
 			this.width = this.rect.width;
 			this.height = this.rect.height;
-			this.buffer = this.context.createImageData(this.width * this.supersampling, this.height * this.supersampling);
+			this.context.scale(1 / supersampling, 1 / supersampling);
+
+			//Setup the supersampled ArrayBuffer
+			this.buffer = this.context.createImageData(this.getWidth(), this.getHeight());
+			this.bufferedImage.width = this.rect.width * supersampling;
+			this.bufferedImage.height = this.rect.height * supersampling;
 			return this;
 		}
+
+		/**
+   * Get the width of canvas with supersampling
+   * @returns the width with supersampling
+   */
+
 	}, {
 		key: 'getWidth',
 		value: function getWidth() {
 			return this.width * this.supersampling;
 		}
+
+		/**
+   * Get height of canvas with supersampling
+   * @returns the height with supersampling
+   */
+
 	}, {
 		key: 'getHeight',
 		value: function getHeight() {
@@ -120,35 +130,54 @@ var Canvas2D = function () {
 	}, {
 		key: 'drawPixel',
 		value: function drawPixel(pixel) {
-			// setTimeout(function(){
-			//console.log("this Happened", pixel.r, pixel.g, pixel.b, pixel.a);
 			this.pixelImageData.data[0] = pixel.r;
 			this.pixelImageData.data[1] = pixel.g;
 			this.pixelImageData.data[2] = pixel.b;
 			this.pixelImageData.data[3] = pixel.a;
-			this.context.putImageData(this.pixelImageData, pixel.x, pixel.y);
-			// }.bind(this),0);
+			this.context.putImageData(this.pixelImageData, pixel.x / this.supersampling, pixel.y / this.supersampling);
 		}
+
+		/**
+   * Draws a pixel to the supersampled ArrayBuffer
+   * @param {*} pixel - The pixel to draw
+   */
+
 	}, {
 		key: 'drawBufferedPixel',
 		value: function drawBufferedPixel(pixel) {
-			var index = 4 * (pixel.x + pixel.y * this.width * this.supersampling) - 4;
+			var index = 4 * (pixel.x + pixel.y * this.getWidth()) - 4;
 			this.buffer.data[index] = pixel.r;
 			this.buffer.data[index + 1] = pixel.g;
 			this.buffer.data[index + 2] = pixel.b;
 			this.buffer.data[index + 3] = pixel.a;
 		}
+
+		/**
+   * Flushes the supersampled ArrayBuffer to the rendered canvas' drawing context
+   */
+
 	}, {
 		key: 'flushBuffer',
 		value: function flushBuffer() {
-			if (this.supersampling > 1) this.context.putImageData(this.buffer, 0, 0, 0, 0, this.width, this.height); //TODO Not functional
-			else this.context.putImageData(this.buffer, 0, 0);
+			this.bufferedContext.putImageData(this.buffer, 0, 0);
+			this.context.drawImage(this.bufferedImage, 0, 0); //Still not working
 		}
+
+		/**
+   * Clears the supersampled ArrayBuffer
+   */
+
 	}, {
 		key: 'clearBuffer',
 		value: function clearBuffer() {
-			this.buffer = this.context.createImageData(this.width, this.height);
+			this.buffer = this.context.createImageData(this.getWidth(), this.getHeight());
 		}
+
+		/**
+   * Draws a Line on the canvas directly between 2 points
+   * @param {{x1,x2,y1,y2}} line 
+   */
+
 	}, {
 		key: 'drawLine',
 		value: function drawLine(line) {
@@ -164,7 +193,18 @@ var Canvas2D = function () {
 
 exports.default = Canvas2D;
 
-},{}],3:[function(require,module,exports){
+},{}],2:[function(require,module,exports){
+"use strict";
+
+var _index = require("./raytracer-js/index.js");
+
+var _index2 = _interopRequireDefault(_index);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+(0, _index2.default)();
+
+},{"./raytracer-js/index.js":4}],3:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -196,19 +236,15 @@ if (window) {
 
 var Raytracer = function () {
 	function Raytracer(config) {
-		var _this = this;
-
 		_classCallCheck(this, Raytracer);
 
 		// this.camera = config.camera;
-		this.world = config.world;
+		if (config.world instanceof _lib.World) this.world = config.world;else throw "World passed in is not a World Object";
 
-		this.world.some(function (e) {
-			if (e instanceof _lib.Camera) {
-				_this.camera = e;
-			};
-		});
-		if (!this.camera) throw "World Does not have a Camera!";
+		this.camera = this.world.getCamera();
+		// this.world.some((e) => {if(e instanceof Camera){this.camera = e;};});
+		// if(!this.camera)
+		// 	throw "World Does not have a Camera!";
 
 		this.pixelRenderer = config.pixelRenderer; //Must support function drawPixel({x, y, r, g, b, a});
 
@@ -224,8 +260,8 @@ var Raytracer = function () {
 	_createClass(Raytracer, [{
 		key: "drawTitle",
 		value: function drawTitle() {
-			var width = this.pixelRenderer.width;
-			var height = this.pixelRenderer.height;
+			var width = this.pixelRenderer.getWidth();
+			var height = this.pixelRenderer.getHeight();
 			var ctx = this.pixelRenderer.context;
 			var x = width / 2;
 			var y1 = height * (1 / 3);
@@ -242,8 +278,8 @@ var Raytracer = function () {
 	}, {
 		key: "drawRenderingPlaceholder",
 		value: function drawRenderingPlaceholder() {
-			var width = this.pixelRenderer.width;
-			var height = this.pixelRenderer.height;
+			var width = this.pixelRenderer.getWidth();
+			var height = this.pixelRenderer.getHeight();
 			var ctx = this.pixelRenderer.context;
 			var x = width / 2;
 			var y = height / 2;
@@ -269,16 +305,12 @@ var Raytracer = function () {
 	}, {
 		key: "getObjectList",
 		value: function getObjectList() {
-			return this.world.filter(function (elem) {
-				return elem instanceof _objects.GenericObject;
-			});
+			return this.world.getObjects();
 		}
 	}, {
 		key: "getLightList",
 		value: function getLightList() {
-			return this.world.filter(function (elem) {
-				return elem instanceof _objects.Light;
-			});
+			return this.world.getLights();
 		}
 	}, {
 		key: "stop",
@@ -292,45 +324,45 @@ var Raytracer = function () {
 	}, {
 		key: "render",
 		value: function render() {
-			var _this2 = this;
+			var _this = this;
 
 			this.drawRenderingPlaceholder();
 
 			//Give canvas async time to update
 			var renderLoop = setTimeout(function () {
-				_this2.pixelRenderer.clearBuffer();
-				_this2.camera.width = _this2.pixelRenderer.width;
-				_this2.camera.height = _this2.pixelRenderer.height;
-				_this2.camera.setupVectors();
+				_this.pixelRenderer.clearBuffer();
+				_this.camera.width = _this.pixelRenderer.getWidth();
+				_this.camera.height = _this.pixelRenderer.getHeight();
+				_this.camera.setupVectors();
 
 				//Run outerloop in interval so canvas can live update
 				var i = 0;
-				_this2.timeint = setInterval(function () {
-					if (i < _this2.camera.y) {
+				_this.timeint = setInterval(function () {
+					if (i < _this.camera.y) {
 						i++;
-						for (var j = 0; j < _this2.camera.x; j++) {
-							var ray = new _lib.Ray({ x: j, y: i, camera: _this2.camera, depth: 0 });
-							var color = _this2.raytrace(ray);
+						for (var j = 0; j < _this.camera.x; j++) {
+							var ray = new _lib.Ray({ x: j, y: i, camera: _this.camera, depth: 0 });
+							var color = _this.raytrace(ray);
 							var pixel = color;
 							pixel.x = j;
 							pixel.y = i;
-							_this2.pixelRenderer.drawPixel(pixel);
+							_this.pixelRenderer.drawBufferedPixel(pixel);
 						}
-						// this.pixelRenderer.flushBuffer();
+						_this.pixelRenderer.flushBuffer();
 
 						//Update Progress Bar
-						var progress = Math.floor(i / _this2.camera.y * 100);
-						if (_this2.progress && _this2.progress.value != progress) {
-							_this2.progress.value = progress;
+						var progress = Math.floor(i / _this.camera.y * 100);
+						if (_this.progress && _this.progress.value != progress) {
+							_this.progress.value = progress;
 						}
 					} else {
 						//Get rid of the Progress Bar
-						if (_this2.progress) {
-							_this2.pixelRenderer.container.removeChild(_this2.progress);
-							_this2.progress = null;
+						if (_this.progress) {
+							_this.pixelRenderer.container.removeChild(_this.progress);
+							_this.progress = null;
 						}
 						// this.pixelRenderer.flushBuffer();
-						clearInterval(_this2.timeint);
+						clearInterval(_this.timeint);
 					}
 				}, 0);
 			}, 0);
@@ -401,7 +433,7 @@ var Raytracer = function () {
 	}, {
 		key: "_diffuseShader",
 		value: function _diffuseShader(ray) {
-			var _this3 = this;
+			var _this2 = this;
 
 			var object = ray.lowestIntersectObject;
 			var intersect = ray.lowestIntersectPoint;
@@ -419,7 +451,7 @@ var Raytracer = function () {
 					var ns = _lib.Math3D.dotProduct(n, s);
 
 					var shadowDetect = new _lib.Ray({ e: intersect, d: s, exclusionObj: object });
-					_this3.getObjectList().map(function (obj) {
+					_this2.getObjectList().map(function (obj) {
 						obj.rayIntersect(shadowDetect);
 					});
 
@@ -447,7 +479,7 @@ var Raytracer = function () {
 	}, {
 		key: "_specularShader",
 		value: function _specularShader(ray) {
-			var _this4 = this;
+			var _this3 = this;
 
 			var object = ray.lowestIntersectObject;
 			var intersect = ray.lowestIntersectPoint;
@@ -464,7 +496,7 @@ var Raytracer = function () {
 					var ns = _lib.Math3D.dotProduct(n, s);
 
 					var shadowDetect = new _lib.Ray({ e: intersect, d: s, exclusionObj: object });
-					_this4.getObjectList().map(function (obj) {
+					_this3.getObjectList().map(function (obj) {
 						obj.rayIntersect(shadowDetect);
 					});
 					if (!shadowDetect.intersectedObject) {
@@ -576,7 +608,7 @@ var Raytracer = function () {
 
 exports.default = Raytracer;
 
-},{"./lib":8,"./objects":14}],4:[function(require,module,exports){
+},{"./lib":9,"./objects":15}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -615,6 +647,8 @@ function init() {
 		}
 	});
 
+	window.canvas2D.setSupersampling(1.5);
+
 	//Wait for Window load to build system
 	window.onload = function () {
 		//Camera
@@ -631,8 +665,8 @@ function init() {
 		//Scene Object Defs
 
 		//World List
-		var world = [];
-		world.push(camera);
+		var world = new _lib.World({ camera: camera });
+		// world.push(camera);
 
 		// var scale = 0.1;
 		// var scaleF = 0.01;
@@ -670,7 +704,7 @@ function init() {
 					// let mat = Math3D.transformPipe(pipe);
 					// console.log(mat);
 
-					world.push(new _objects.Sphere({
+					world.addObject(new _objects.Sphere({
 						baseC: { r: 0, g: 0, b: 255, a: 255 },
 						specularC: { r: 255, g: 255, b: 255, a: 255 },
 						transform: _lib.Math3D.transformPipe(pipe)
@@ -703,9 +737,8 @@ function init() {
 		var olight = new _objects.OmniLight({ intensity: 2.0,
 			source: { x: 0, y: 0, z: 8, h: 1 } }); //Create an OmniLight
 
-		world.push(plane);
-		world.push(olight);
-		world.push(new _objects.OmniLight({ intensity: 1.0,
+		world.addObject(plane);
+		world.addLight(olight, new _objects.OmniLight({ intensity: 1.0,
 			source: { x: 0, y: 8, z: 1, h: 1 } }), new _objects.OmniLight({ intensity: 1.0,
 			source: { x: 0, y: -8, z: 1, h: 1 } }), new _objects.OmniLight({ intensity: 1.0,
 			source: { x: 8, y: 0, z: 1, h: 1 } }), new _objects.OmniLight({ intensity: 1.0,
@@ -738,7 +771,7 @@ function init() {
 	// }
 };
 
-},{"./Raytracer.js":3,"./lib":8,"./objects":14,"canvas-2d-framework":2}],5:[function(require,module,exports){
+},{"./Raytracer.js":3,"./lib":9,"./objects":15,"canvas-2d-framework":1}],5:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1662,6 +1695,106 @@ var Ray = exports.Ray = function () {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.World = undefined;
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _objects = require("../objects");
+
+var _ = require(".");
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * Ray Object to contain data for a Ray Intersect List (Now in ES6)
+ * @class  World
+ * 
+ * @author  James Wake (SparkX120)
+ * @version 0.1 (2018/06)
+ * @license MIT
+ */
+var World = exports.World = function () {
+    /**
+     * Instantiate a World Object
+     * @param {{camera:Camera}} config The Configuration Object for this world including the default camera
+     */
+    function World(config) {
+        _classCallCheck(this, World);
+
+        if (config.camera) this.camera = config.camera;
+
+        this.objects = [];
+        this.lights = [];
+    }
+
+    /**
+     * Add an object to the World
+     * @param {GenericObject} object 
+     */
+
+
+    _createClass(World, [{
+        key: "addObject",
+        value: function addObject(object) {
+            if (!object instanceof _objects.GenericObject) throw "Error Inavlid Object Type passed to World.addObject";
+            this.objects.push(object);
+        }
+
+        /**
+         * Add a light to the World
+         * @param {Light} light 
+         */
+
+    }, {
+        key: "addLight",
+        value: function addLight(light) {
+            if (!light instanceof _objects.Light) throw "Error Invald Light Type passed to World.addLight";
+            this.lights.push(light);
+        }
+
+        /**
+         * Get the World Camera
+         * @returns {Camera} The World Camera
+         */
+
+    }, {
+        key: "getCamera",
+        value: function getCamera() {
+            return this.camera;
+        }
+
+        /**
+         * Get the Object List for this World
+         * @returns {[GenericObject]} A List of GenericObjects
+         */
+
+    }, {
+        key: "getObjects",
+        value: function getObjects() {
+            return this.objects;
+        }
+
+        /**
+         * Get the Light List for this World
+         * @returns {[Light]} A List of Lights
+         */
+
+    }, {
+        key: "getLights",
+        value: function getLights() {
+            return this.lights;
+        }
+    }]);
+
+    return World;
+}();
+
+},{".":9,"../objects":15}],9:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
 
@@ -1701,7 +1834,19 @@ Object.keys(_Math3D).forEach(function (key) {
   });
 });
 
-},{"./Camera.js":5,"./Math3D.js":6,"./Ray.js":7}],9:[function(require,module,exports){
+var _World = require("./World.js");
+
+Object.keys(_World).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _World[key];
+    }
+  });
+});
+
+},{"./Camera.js":5,"./Math3D.js":6,"./Ray.js":7,"./World.js":8}],10:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1801,7 +1946,7 @@ var GenericObject = exports.GenericObject = function () {
 	return GenericObject;
 }();
 
-},{"../lib":8}],10:[function(require,module,exports){
+},{"../lib":9}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1827,7 +1972,7 @@ var Light = exports.Light = function Light(config) {
 	if (config.intensity) this.intensity = config.intensity;else this.inensity = 1.0;
 };
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1868,7 +2013,7 @@ var OmniLight = exports.OmniLight = function (_Light) {
   return OmniLight;
 }(_Light2.Light);
 
-},{"./Light.js":10}],12:[function(require,module,exports){
+},{"./Light.js":11}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -1965,7 +2110,7 @@ var Plane = exports.Plane = function (_GenericObject) {
 	return Plane;
 }(_GenericObject2.GenericObject);
 
-},{"../lib":8,"./GenericObject.js":9}],13:[function(require,module,exports){
+},{"../lib":9,"./GenericObject.js":10}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2082,7 +2227,7 @@ var Sphere = exports.Sphere = function (_GenericObject) {
 	return Sphere;
 }(_GenericObject2.GenericObject);
 
-},{"../lib":8,"./GenericObject.js":9}],14:[function(require,module,exports){
+},{"../lib":9,"./GenericObject.js":10}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -2149,4 +2294,4 @@ Object.keys(_Sphere).forEach(function (key) {
   });
 });
 
-},{"./GenericObject.js":9,"./Light.js":10,"./OmniLight.js":11,"./Plane.js":12,"./Sphere.js":13}]},{},[1]);
+},{"./GenericObject.js":10,"./Light.js":11,"./OmniLight.js":12,"./Plane.js":13,"./Sphere.js":14}]},{},[2]);

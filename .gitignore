@@ -3,3 +3,4 @@ npm-debug.log
 !./js/Raytracer.js
 !precomp*
 build_log.log
+package-lock.json

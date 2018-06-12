@@ -1,7 +1,7 @@
 import Canvas2D from "canvas-2d-framework";
 import Raytracer from "./Raytracer.js";
 import {OmniLight, Plane, Sphere} from "./objects";
-import {Camera, Math3D, Matrices3D} from "./lib";
+import {Camera, Math3D, Matrices3D, World} from "./lib";
 
 export default function init(){
 	//Canvas
@@ -20,6 +20,8 @@ export default function init(){
 		}
 	});
 
+	window.canvas2D.setSupersampling(1.5);
+
 	//Wait for Window load to build system
 	window.onload = ()=>{
 		//Camera
@@ -36,8 +38,8 @@ export default function init(){
 		//Scene Object Defs
 
 		//World List
-		var world = [];
-		world.push(camera);
+		var world = new World({camera: camera});
+		// world.push(camera);
 
 		// var scale = 0.1;
 		// var scaleF = 0.01;
@@ -78,7 +80,7 @@ export default function init(){
 					// let mat = Math3D.transformPipe(pipe);
 					// console.log(mat);
 
-					world.push(new Sphere({
+					world.addObject(new Sphere({
 						baseC: {r:0, g:0, b:255, a:255},
 						specularC: {r:255, g:255, b:255, a:255},
 						transform: Math3D.transformPipe(pipe)
@@ -111,15 +113,15 @@ export default function init(){
 		var olight = new OmniLight({intensity:2.0,
 									source:{x:0, y:0, z: 8, h:1}}); //Create an OmniLight
 
-		world.push(plane);
-		world.push(olight);
-		world.push(new OmniLight({intensity:1.0,
+		world.addObject(plane);
+		world.addLight(olight,
+					new OmniLight({intensity:1.0,
 									source:{x:0, y:8, z: 1, h:1}}),
-				   new OmniLight({intensity:1.0,
+					new OmniLight({intensity:1.0,
 									source:{x:0, y:-8, z: 1, h:1}}),
-				   new OmniLight({intensity:1.0,
+					new OmniLight({intensity:1.0,
 									source:{x:8, y:0, z: 1, h:1}}),
-				   new OmniLight({intensity:1.0,
+					new OmniLight({intensity:1.0,
 									source:{x:-8, y:0, z: 1, h:1}}))
 
 		var raytracer = new Raytracer({

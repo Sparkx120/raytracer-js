@@ -1,5 +1,5 @@
 import {GenericObject, Light} from "./objects";
-import {Camera, Ray, Math3D, Matrices3D} from "./lib";
+import {Camera, Ray, Math3D, Matrices3D, World} from "./lib";
 
 export const Version = "1.0.0"
 if(window){
@@ -18,11 +18,15 @@ if(window){
 export default class Raytracer{
 	constructor(config){
 		// this.camera = config.camera;
-		this.world = config.world;
-
-		this.world.some((e) => {if(e instanceof Camera){this.camera = e;};});
-		if(!this.camera)
-			throw "World Does not have a Camera!";
+		if(config.world instanceof World)
+			this.world = config.world;
+		else
+			throw "World passed in is not a World Object"
+		
+		this.camera = this.world.getCamera();
+		// this.world.some((e) => {if(e instanceof Camera){this.camera = e;};});
+		// if(!this.camera)
+		// 	throw "World Does not have a Camera!";
 
 		this.pixelRenderer = config.pixelRenderer; //Must support function drawPixel({x, y, r, g, b, a});
 
@@ -36,8 +40,8 @@ export default class Raytracer{
 	}
 
 	drawTitle(){
-		var width  = this.pixelRenderer.width;
-		var height = this.pixelRenderer.height;
+		var width  = this.pixelRenderer.getWidth();
+		var height = this.pixelRenderer.getHeight();
 		var ctx    = this.pixelRenderer.context;
 		var x      = width  / 2;
       	var y1     = height * (1/3);
@@ -54,8 +58,8 @@ export default class Raytracer{
 	}
 
 	drawRenderingPlaceholder(){
-		var width  = this.pixelRenderer.width;
-		var height = this.pixelRenderer.height;
+		var width  = this.pixelRenderer.getWidth();
+		var height = this.pixelRenderer.getHeight();
 		var ctx    = this.pixelRenderer.context;
 		var x      = width  / 2;
       	var y      = height / 2;
@@ -81,11 +85,11 @@ export default class Raytracer{
 	}
 
 	getObjectList(){
-		return this.world.filter((elem) => elem instanceof GenericObject);
+		return this.world.getObjects();
 	}
 
 	getLightList(){
-		return this.world.filter((elem) => elem instanceof Light);
+		return this.world.getLights();
 	}
 
 	stop(){
@@ -102,8 +106,8 @@ export default class Raytracer{
 		//Give canvas async time to update
 		var renderLoop = setTimeout(()=>{
 			this.pixelRenderer.clearBuffer();
-			this.camera.width = this.pixelRenderer.width;
-			this.camera.height = this.pixelRenderer.height;
+			this.camera.width = this.pixelRenderer.getWidth();
+			this.camera.height = this.pixelRenderer.getHeight();
 			this.camera.setupVectors();
 
 			//Run outerloop in interval so canvas can live update
@@ -116,9 +120,9 @@ export default class Raytracer{
 						var pixel = color;
 						pixel.x = j;
 						pixel.y = i;
-						this.pixelRenderer.drawPixel(pixel);
+						this.pixelRenderer.drawBufferedPixel(pixel);
 					}
-					// this.pixelRenderer.flushBuffer();
+					this.pixelRenderer.flushBuffer();
 
 					//Update Progress Bar
 					var progress = Math.floor((i/this.camera.y)*100);
