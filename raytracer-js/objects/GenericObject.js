@@ -30,7 +30,7 @@ export class GenericObject{
 		if(!this.specularFactor)
 			this.specularFactor = 0.5;
 		if(!this.reflectionFactor)
-			this.reflectionFactor = 0.9;
+			this.reflectionFactor = 0.6;
 		if(!this.refractionFactor)
 			this.refractionFactor = 0.0;
 		if(!this.specularFalloff)

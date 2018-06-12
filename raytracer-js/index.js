@@ -20,13 +20,11 @@ export default function init(){
 		}
 	});
 
-	window.canvas2D.setSupersampling(1.5);
-
 	//Wait for Window load to build system
 	window.onload = ()=>{
 		//Camera
 		var camera = new Camera({
-			position:     {x:2, y:2, z:2, h:1},
+			position:     {x:2, y:2, z:1, h:1},
 			gaze:         {x:0, y:0,  z:0, h:1},
 			width:        canvas2D.width,
 			height:       canvas2D.height,
@@ -50,7 +48,7 @@ export default function init(){
 		// var fsphere = 0.25;
 
 		//Scale of Sphere
-		let scale = 0.2;
+		let scale = 0.15;
 		//Scale of jitter of scale
 		let scaleF = 0.0;
 		//Spatial Jitter
@@ -103,26 +101,94 @@ export default function init(){
 		// 			])
 		// })); //Create Generic Sphere
 
-		var plane = new Plane({baseC: {r:100, g:100, b:100, a:255},
-								diffuseFactor: 0.8,
-								specularFactor: 0.0001,
-								reflectionFactor: 0.0001,
-								transform: Math3D.translate(0,0,-1)
-								});
+		var floor = new Plane({baseC: {r:100, g:100, b:100, a:255},
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: Math3D.transformPipe([
+				Math3D.translate(0, 0, -0.25),
+				Math3D.scale(10, 10, 10),
+			]),
+			restricted: true
+		});
+		world.addObject(floor);
 
+		var wall1 = new Plane({baseC: {r:100, g:100, b:100, a:255},
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: Math3D.transformPipe([
+				Math3D.translate(-4, -4, 0),
+				Math3D.scale(10, 10, 10),
+				Math3D.rotateOnArbitrary(Math.PI/2, {x:0, y:1, z:0, h:1})
+				
+			])
+		});
+		world.addObject(wall1);
+		
+		var wall2 = new Plane({baseC: {r:100, g:100, b:100, a:255},
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: Math3D.transformPipe([
+				Math3D.translate(-4, -4, 0),
+				Math3D.scale(10, 10, 10),
+				Math3D.rotateOnArbitrary(-Math.PI/2, {x:1, y:0, z:0, h:1})
+				
+			])
+		});
+		world.addObject(wall2);
+
+		var wall3 = new Plane({baseC: {r:100, g:100, b:100, a:255},
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: Math3D.transformPipe([
+				Math3D.translate(4, 4, 0),
+				Math3D.scale(10, 10, 10),
+				Math3D.rotateOnArbitrary(-Math.PI/2, {x:0, y:1, z:0, h:1})
+				
+			])
+		});
+		// world.addObject(wall3);
+
+		var wall4 = new Plane({baseC: {r:100, g:100, b:100, a:255},
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: Math3D.transformPipe([
+				Math3D.translate(4, 4, 0),
+				Math3D.scale(10, 10, 10),
+				Math3D.rotateOnArbitrary(Math.PI/2, {x:1, y:0, z:0, h:1})
+				
+			])
+		});
+		// world.addObject(wall4);
+
+		var cieling = new Plane({baseC: {r:100, g:100, b:100, a:255},
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: Math3D.transformPipe([
+				Math3D.translate(0, 0, 3.75),
+				Math3D.scale(10, 10, 10),
+				Math3D.rotateOnArbitrary(Math.PI, {x:1, y:1, z:0, h:1})
+			])
+		});
+		//world.addObject(cieling);
+		
 		var olight = new OmniLight({intensity:2.0,
-									source:{x:0, y:0, z: 8, h:1}}); //Create an OmniLight
+									source:{x:2, y:1, z: 3, h:1}}); //Create an OmniLight
 
-		world.addObject(plane);
-		world.addLight(olight,
-					new OmniLight({intensity:1.0,
-									source:{x:0, y:8, z: 1, h:1}}),
-					new OmniLight({intensity:1.0,
-									source:{x:0, y:-8, z: 1, h:1}}),
-					new OmniLight({intensity:1.0,
-									source:{x:8, y:0, z: 1, h:1}}),
-					new OmniLight({intensity:1.0,
-									source:{x:-8, y:0, z: 1, h:1}}))
+		world.addLight(olight);
+					// new OmniLight({intensity:1.0,
+					// 				source:{x:0, y:2, z: 0.2, h:1}}),
+					// new OmniLight({intensity:1.0,
+					// 				source:{x:0, y:-2, z: 0.2, h:1}}),
+					// new OmniLight({intensity:1.0,
+					// 				source:{x:2, y:0, z: 0.2, h:1}}),
+					// new OmniLight({intensity:1.0,
+					// 				source:{x:-2, y:0, z: 0.2, h:1}}))
 
 		var raytracer = new Raytracer({
 			world: world,
@@ -131,7 +197,7 @@ export default function init(){
 
 		console.log(raytracer);
 
-		setTimeout(()=>raytracer.render(),2000) //Do this in a timeout to allow page to finish loading...
+		setTimeout(()=>raytracer.renderAnimate(),2000) //Do this in a timeout to allow page to finish loading...
 
 		var resizeTimer;
 		window.onresize = ()=>{

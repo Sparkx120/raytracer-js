@@ -52,31 +52,31 @@ export class Math3D{
 		return data;
 	}
 	
-	static rotateOnArbitrary(deg, axis){
+	static rotateOnArbitrary(rad, axis){
 		//Preconfig
-		var cos = Math.cos((Math.PI/180)*deg);
-		var sin = Math.sin((Math.PI/180)*deg);
+		var cos = Math.cos(rad);
+		var sin = Math.sin(rad);
 		var v = Math3D.normalizeVector(axis);
 		
 		var data = Math3D.initMatrix(4,4);
 		
 		//Setup Jv Matrix
-		data[0][0] = 0;			data[0][1] = -v.z();	data[0][2] = v.y();		data[0][3] = 0;
-		data[1][0] = v.z();		data[1][1] = 0;			data[1][2] = -v.x();	data[1][3] = 0;
-		data[2][0] = -v.y();	data[2][1] = v.x();		data[2][2] = 0;			data[2][3] = 0;
+		data[0][0] = 0;			data[0][1] = -v.z;		data[0][2] = v.y;		data[0][3] = 0;
+		data[1][0] = v.z;		data[1][1] = 0;			data[1][2] = -v.x;		data[1][3] = 0;
+		data[2][0] = -v.y;		data[2][1] = v.x;		data[2][2] = 0;			data[2][3] = 0;
 		data[3][0] = 0;			data[3][1] = 0;			data[3][2] = 0;			data[3][3] = 1;
 		
 	
 		var R = Math3D.addMatrix(
-						Matrices3D.I, MatrixMath3D.addMatrix(
+						Matrices3D.I, Math3D.addMatrix(
 							Math3D.scalarMultiplyMatrix(
 								data, 
-								sin)), 
+								sin), 
 							Math3D.scalarMultiplyMatrix(
 								Math3D.multiplyMatrices(
 									data,
 									data),
-								 1-cos));
+								 1-cos)));
 		
 		return R;
 	}

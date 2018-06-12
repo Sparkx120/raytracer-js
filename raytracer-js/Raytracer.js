@@ -30,15 +30,21 @@ export default class Raytracer{
 
 		this.pixelRenderer = config.pixelRenderer; //Must support function drawPixel({x, y, r, g, b, a});
 
-		this.backgroundColor = {r: 0, g: 0, b: 0, a: 255};
+		this.backgroundColor = {r: 0, g: 255, b: 0, a: 255};
 		this.color = {r: 100, g: 100, b: 100, a: 255};
 
 		this.falloffFactor = 10;
 		this.recursionFactor = 4;
 
+		this.running = false;
+		this.noplaceholder = false;
+
 		this.drawTitle();
 	}
 
+	/**
+	 * Draw the Title Image to the Raytracer TODO Make this optional
+	 */
 	drawTitle(){
 		var width  = this.pixelRenderer.getWidth();
 		var height = this.pixelRenderer.getHeight();
@@ -57,6 +63,9 @@ export default class Raytracer{
 
 	}
 
+	/**
+	 * Draw a placeholder before render
+	 */
 	drawRenderingPlaceholder(){
 		var width  = this.pixelRenderer.getWidth();
 		var height = this.pixelRenderer.getHeight();
@@ -83,7 +92,7 @@ export default class Raytracer{
 		if(this.pixelRenderer.container)
 			this.pixelRenderer.container.appendChild(this.progress);
 	}
-
+	
 	getObjectList(){
 		return this.world.getObjects();
 	}
@@ -97,11 +106,50 @@ export default class Raytracer{
 			console.log("killing render");
 			clearInterval(this.timeint);
 			this.timeint = null;
+			this.running = false;
 		}
 	}
 
+	renderAnimate(){
+		this.running = true;
+		let counter = 0;
+		this.pixelRenderer.setSupersampling(0.15);
+		
+		this.timeint = setInterval(()=>{
+			if(!this.running){
+				clearInterval(this.timeint);
+			}
+			//Move by chord length on circle (ie edge of segment)
+			this.camera = new Camera({
+				position:     {x:2*Math.sin(counter), y:2*Math.cos(counter), z:2*(Math.sin(counter/2)+1), h:1},
+				gaze:         {x:0, y:0,  z:0.25, h:1},
+				width:        this.pixelRenderer.getWidth(),
+				height:       this.pixelRenderer.getHeight(),
+				viewingAngle: 60,
+				world:        null,
+				noPipe:       true
+			});
+			// this.camera.setupVectors();
+
+			//Render image
+			for(var i=0;i<=this.camera.y;i++){
+				this._renderLine(i, true);
+			}
+
+			// var i = 0;
+			// this.timeint = setInterval(()=>{
+			// 	i++;
+			// 	this._renderLine(i, false, this.timeint);
+			// }, 0);
+
+			counter += Math.PI/20;
+			// this.running = false;
+		},0);
+	}
+
 	render(){
-		this.drawRenderingPlaceholder();
+		if(!this.noplaceholder)
+			this.drawRenderingPlaceholder();
 
 		//Give canvas async time to update
 		var renderLoop = setTimeout(()=>{
@@ -113,36 +161,44 @@ export default class Raytracer{
 			//Run outerloop in interval so canvas can live update
 			var i = 0;
 			this.timeint = setInterval(()=>{
-				if(i<this.camera.y){ i++;
-					for(var j=0; j<this.camera.x; j++){
-						var ray   = new Ray({x: j, y:i, camera: this.camera, depth: 0});
-						var color = this.raytrace(ray);
-						var pixel = color;
-						pixel.x = j;
-						pixel.y = i;
-						this.pixelRenderer.drawBufferedPixel(pixel);
-					}
-					this.pixelRenderer.flushBuffer();
-
-					//Update Progress Bar
-					var progress = Math.floor((i/this.camera.y)*100);
-					if(this.progress && this.progress.value != progress){
-						this.progress.value = progress;
-					}
-
-				}else{
-					//Get rid of the Progress Bar
-					if(this.progress){
-						this.pixelRenderer.container.removeChild(this.progress);
-						this.progress = null;
-					}
-					// this.pixelRenderer.flushBuffer();
-					clearInterval(this.timeint);
-				}
+				i++;
+				this._renderLine(i, true, this.timeint);
 			}, 0);
 
 			
 		},0);
+	}
+
+	_renderLine(i, enableFlush, interval){
+		if(i<this.camera.y){
+			for(var j=0; j<this.camera.x; j++){
+				var ray   = new Ray({x: j, y:i, camera: this.camera, depth: 0});
+				var color = this.raytrace(ray);
+				var pixel = color;
+				pixel.x = j;
+				pixel.y = i;
+				this.pixelRenderer.drawBufferedPixel(pixel);
+			}
+			if(enableFlush)
+				this.pixelRenderer.flushBuffer();
+
+			//Update Progress Bar
+			var progress = Math.floor((i/this.camera.y)*100);
+			if(this.progress && this.progress.value != progress){
+				this.progress.value = progress;
+			}
+
+		}else{
+			//Get rid of the Progress Bar
+			if(this.progress){
+				this.pixelRenderer.container.removeChild(this.progress);
+				this.progress = null;
+			}
+			// this.pixelRenderer.flushBuffer();
+			if(interval){
+				clearInterval(interval);
+			}
+		}
 	}
 
 	
@@ -226,9 +282,9 @@ export default class Raytracer{
 
 		if(this.getLightList()){
 			this.getLightList().map((light, index, lights)=>{
-				var s = Math3D.vectorizePoints(intersect, light.source);
-				var v = Math3D.vectorizePoints(intersect, ray.e);
-				var ns    = Math3D.dotProduct(n, s);
+				var s	= Math3D.vectorizePoints(intersect, light.source);
+				var v	= Math3D.vectorizePoints(intersect, ray.e);
+				var ns	= Math3D.dotProduct(n, s);
 
 				var shadowDetect = new Ray({e:intersect, d: s, exclusionObj: object});
 				this.getObjectList().map((obj)=>{
@@ -240,7 +296,7 @@ export default class Raytracer{
 					// var distance = Math3D.magnitudeOfVector(s);
 
 					//Compute Diffuse Intensity
-					var div   = Math3D.magnitudeOfVector(s)*Math3D.magnitudeOfVector(n);
+					var div = Math3D.magnitudeOfVector(s)*Math3D.magnitudeOfVector(n);
 					if(div != 0){
 						var nDots = ns/(div);
 						var diffuseIntensity = (light.intensity*Math.max(nDots, 0));

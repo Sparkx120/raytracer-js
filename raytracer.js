@@ -65,6 +65,12 @@ var Canvas2D = function () {
 				_this.resizeCB();
 			}
 		});
+		window.addEventListener('load', function (event) {
+			_this.setSupersampling(_this.supersampling);
+			if (_this.resizeCB) {
+				_this.resizeCB();
+			}
+		});
 		this.canvas.width = this.rect.width;
 		this.canvas.height = this.rect.height;
 		this.width = this.rect.width;
@@ -87,16 +93,16 @@ var Canvas2D = function () {
 			//Compute Dimensions to use
 			this.supersampling = supersampling;
 			this.rect = this.canvas.getBoundingClientRect();
-			this.canvas.width = this.rect.width;
-			this.canvas.height = this.rect.height;
-			this.width = this.rect.width;
-			this.height = this.rect.height;
+			this.canvas.width = Math.floor(this.rect.width);
+			this.canvas.height = Math.floor(this.rect.height);
+			this.width = Math.floor(this.rect.width);
+			this.height = Math.floor(this.rect.height);
 			this.context.scale(1 / supersampling, 1 / supersampling);
 
 			//Setup the supersampled ArrayBuffer
 			this.buffer = this.context.createImageData(this.getWidth(), this.getHeight());
-			this.bufferedImage.width = this.rect.width * supersampling;
-			this.bufferedImage.height = this.rect.height * supersampling;
+			this.bufferedImage.width = this.getWidth();
+			this.bufferedImage.height = this.getHeight();
 			return this;
 		}
 
@@ -108,7 +114,7 @@ var Canvas2D = function () {
 	}, {
 		key: 'getWidth',
 		value: function getWidth() {
-			return this.width * this.supersampling;
+			return Math.ceil(this.width * this.supersampling);
 		}
 
 		/**
@@ -119,7 +125,7 @@ var Canvas2D = function () {
 	}, {
 		key: 'getHeight',
 		value: function getHeight() {
-			return this.height * this.supersampling;
+			return Math.ceil(this.height * this.supersampling);
 		}
 
 		/**
@@ -248,14 +254,22 @@ var Raytracer = function () {
 
 		this.pixelRenderer = config.pixelRenderer; //Must support function drawPixel({x, y, r, g, b, a});
 
-		this.backgroundColor = { r: 0, g: 0, b: 0, a: 255 };
+		this.backgroundColor = { r: 0, g: 255, b: 0, a: 255 };
 		this.color = { r: 100, g: 100, b: 100, a: 255 };
 
 		this.falloffFactor = 10;
 		this.recursionFactor = 4;
 
+		this.running = false;
+		this.noplaceholder = false;
+
 		this.drawTitle();
 	}
+
+	/**
+  * Draw the Title Image to the Raytracer TODO Make this optional
+  */
+
 
 	_createClass(Raytracer, [{
 		key: "drawTitle",
@@ -275,6 +289,11 @@ var Raytracer = function () {
 			ctx.font = '15pt Helvetica,Arial,sans-serif';
 			ctx.fillText("Version " + Version + " By SparkX120", x, y2);
 		}
+
+		/**
+   * Draw a placeholder before render
+   */
+
 	}, {
 		key: "drawRenderingPlaceholder",
 		value: function drawRenderingPlaceholder() {
@@ -319,53 +338,101 @@ var Raytracer = function () {
 				console.log("killing render");
 				clearInterval(this.timeint);
 				this.timeint = null;
+				this.running = false;
 			}
+		}
+	}, {
+		key: "renderAnimate",
+		value: function renderAnimate() {
+			var _this = this;
+
+			this.running = true;
+			var counter = 0;
+			this.pixelRenderer.setSupersampling(0.15);
+
+			this.timeint = setInterval(function () {
+				if (!_this.running) {
+					clearInterval(_this.timeint);
+				}
+				//Move by chord length on circle (ie edge of segment)
+				_this.camera = new _lib.Camera({
+					position: { x: 2 * Math.sin(counter), y: 2 * Math.cos(counter), z: 2 * (Math.sin(counter / 2) + 1), h: 1 },
+					gaze: { x: 0, y: 0, z: 0.25, h: 1 },
+					width: _this.pixelRenderer.getWidth(),
+					height: _this.pixelRenderer.getHeight(),
+					viewingAngle: 60,
+					world: null,
+					noPipe: true
+				});
+				// this.camera.setupVectors();
+
+				//Render image
+				for (var i = 0; i <= _this.camera.y; i++) {
+					_this._renderLine(i, true);
+				}
+
+				// var i = 0;
+				// this.timeint = setInterval(()=>{
+				// 	i++;
+				// 	this._renderLine(i, false, this.timeint);
+				// }, 0);
+
+				counter += Math.PI / 20;
+				// this.running = false;
+			}, 0);
 		}
 	}, {
 		key: "render",
 		value: function render() {
-			var _this = this;
+			var _this2 = this;
 
-			this.drawRenderingPlaceholder();
+			if (!this.noplaceholder) this.drawRenderingPlaceholder();
 
 			//Give canvas async time to update
 			var renderLoop = setTimeout(function () {
-				_this.pixelRenderer.clearBuffer();
-				_this.camera.width = _this.pixelRenderer.getWidth();
-				_this.camera.height = _this.pixelRenderer.getHeight();
-				_this.camera.setupVectors();
+				_this2.pixelRenderer.clearBuffer();
+				_this2.camera.width = _this2.pixelRenderer.getWidth();
+				_this2.camera.height = _this2.pixelRenderer.getHeight();
+				_this2.camera.setupVectors();
 
 				//Run outerloop in interval so canvas can live update
 				var i = 0;
-				_this.timeint = setInterval(function () {
-					if (i < _this.camera.y) {
-						i++;
-						for (var j = 0; j < _this.camera.x; j++) {
-							var ray = new _lib.Ray({ x: j, y: i, camera: _this.camera, depth: 0 });
-							var color = _this.raytrace(ray);
-							var pixel = color;
-							pixel.x = j;
-							pixel.y = i;
-							_this.pixelRenderer.drawBufferedPixel(pixel);
-						}
-						_this.pixelRenderer.flushBuffer();
-
-						//Update Progress Bar
-						var progress = Math.floor(i / _this.camera.y * 100);
-						if (_this.progress && _this.progress.value != progress) {
-							_this.progress.value = progress;
-						}
-					} else {
-						//Get rid of the Progress Bar
-						if (_this.progress) {
-							_this.pixelRenderer.container.removeChild(_this.progress);
-							_this.progress = null;
-						}
-						// this.pixelRenderer.flushBuffer();
-						clearInterval(_this.timeint);
-					}
+				_this2.timeint = setInterval(function () {
+					i++;
+					_this2._renderLine(i, true, _this2.timeint);
 				}, 0);
 			}, 0);
+		}
+	}, {
+		key: "_renderLine",
+		value: function _renderLine(i, enableFlush, interval) {
+			if (i < this.camera.y) {
+				for (var j = 0; j < this.camera.x; j++) {
+					var ray = new _lib.Ray({ x: j, y: i, camera: this.camera, depth: 0 });
+					var color = this.raytrace(ray);
+					var pixel = color;
+					pixel.x = j;
+					pixel.y = i;
+					this.pixelRenderer.drawBufferedPixel(pixel);
+				}
+				if (enableFlush) this.pixelRenderer.flushBuffer();
+
+				//Update Progress Bar
+				var progress = Math.floor(i / this.camera.y * 100);
+				if (this.progress && this.progress.value != progress) {
+					this.progress.value = progress;
+				}
+			} else {
+				//Get rid of the Progress Bar
+				if (this.progress) {
+					this.pixelRenderer.container.removeChild(this.progress);
+					this.progress = null;
+				}
+				// this.pixelRenderer.flushBuffer();
+				if (interval) {
+					clearInterval(interval);
+				}
+			}
 		}
 	}, {
 		key: "raytrace",
@@ -433,7 +500,7 @@ var Raytracer = function () {
 	}, {
 		key: "_diffuseShader",
 		value: function _diffuseShader(ray) {
-			var _this2 = this;
+			var _this3 = this;
 
 			var object = ray.lowestIntersectObject;
 			var intersect = ray.lowestIntersectPoint;
@@ -451,7 +518,7 @@ var Raytracer = function () {
 					var ns = _lib.Math3D.dotProduct(n, s);
 
 					var shadowDetect = new _lib.Ray({ e: intersect, d: s, exclusionObj: object });
-					_this2.getObjectList().map(function (obj) {
+					_this3.getObjectList().map(function (obj) {
 						obj.rayIntersect(shadowDetect);
 					});
 
@@ -479,7 +546,7 @@ var Raytracer = function () {
 	}, {
 		key: "_specularShader",
 		value: function _specularShader(ray) {
-			var _this3 = this;
+			var _this4 = this;
 
 			var object = ray.lowestIntersectObject;
 			var intersect = ray.lowestIntersectPoint;
@@ -496,7 +563,7 @@ var Raytracer = function () {
 					var ns = _lib.Math3D.dotProduct(n, s);
 
 					var shadowDetect = new _lib.Ray({ e: intersect, d: s, exclusionObj: object });
-					_this3.getObjectList().map(function (obj) {
+					_this4.getObjectList().map(function (obj) {
 						obj.rayIntersect(shadowDetect);
 					});
 					if (!shadowDetect.intersectedObject) {
@@ -647,13 +714,11 @@ function init() {
 		}
 	});
 
-	window.canvas2D.setSupersampling(1.5);
-
 	//Wait for Window load to build system
 	window.onload = function () {
 		//Camera
 		var camera = new _lib.Camera({
-			position: { x: 2, y: 2, z: 2, h: 1 },
+			position: { x: 2, y: 2, z: 1, h: 1 },
 			gaze: { x: 0, y: 0, z: 0, h: 1 },
 			width: canvas2D.width,
 			height: canvas2D.height,
@@ -677,7 +742,7 @@ function init() {
 		// var fsphere = 0.25;
 
 		//Scale of Sphere
-		var scale = 0.2;
+		var scale = 0.15;
 		//Scale of jitter of scale
 		var scaleF = 0.0;
 		//Spatial Jitter
@@ -727,22 +792,67 @@ function init() {
 		// 			])
 		// })); //Create Generic Sphere
 
-		var plane = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+		var floor = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
 			diffuseFactor: 0.8,
-			specularFactor: 0.0001,
-			reflectionFactor: 0.0001,
-			transform: _lib.Math3D.translate(0, 0, -1)
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(0, 0, -0.25), _lib.Math3D.scale(10, 10, 10)]),
+			restricted: true
 		});
+		world.addObject(floor);
+
+		var wall1 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(-4, -4, 0), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(Math.PI / 2, { x: 0, y: 1, z: 0, h: 1 })])
+		});
+		world.addObject(wall1);
+
+		var wall2 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(-4, -4, 0), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(-Math.PI / 2, { x: 1, y: 0, z: 0, h: 1 })])
+		});
+		world.addObject(wall2);
+
+		var wall3 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(4, 4, 0), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(-Math.PI / 2, { x: 0, y: 1, z: 0, h: 1 })])
+		});
+		// world.addObject(wall3);
+
+		var wall4 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(4, 4, 0), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(Math.PI / 2, { x: 1, y: 0, z: 0, h: 1 })])
+		});
+		// world.addObject(wall4);
+
+		var cieling = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+			diffuseFactor: 0.8,
+			specularFactor: 0.1,
+			reflectionFactor: 0.003,
+			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(0, 0, 3.75), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(Math.PI, { x: 1, y: 1, z: 0, h: 1 })])
+		});
+		//world.addObject(cieling);
 
 		var olight = new _objects.OmniLight({ intensity: 2.0,
-			source: { x: 0, y: 0, z: 8, h: 1 } }); //Create an OmniLight
+			source: { x: 2, y: 1, z: 3, h: 1 } }); //Create an OmniLight
 
-		world.addObject(plane);
-		world.addLight(olight, new _objects.OmniLight({ intensity: 1.0,
-			source: { x: 0, y: 8, z: 1, h: 1 } }), new _objects.OmniLight({ intensity: 1.0,
-			source: { x: 0, y: -8, z: 1, h: 1 } }), new _objects.OmniLight({ intensity: 1.0,
-			source: { x: 8, y: 0, z: 1, h: 1 } }), new _objects.OmniLight({ intensity: 1.0,
-			source: { x: -8, y: 0, z: 1, h: 1 } }));
+		world.addLight(olight);
+		// new OmniLight({intensity:1.0,
+		// 				source:{x:0, y:2, z: 0.2, h:1}}),
+		// new OmniLight({intensity:1.0,
+		// 				source:{x:0, y:-2, z: 0.2, h:1}}),
+		// new OmniLight({intensity:1.0,
+		// 				source:{x:2, y:0, z: 0.2, h:1}}),
+		// new OmniLight({intensity:1.0,
+		// 				source:{x:-2, y:0, z: 0.2, h:1}}))
 
 		var raytracer = new _Raytracer2.default({
 			world: world,
@@ -752,7 +862,7 @@ function init() {
 		console.log(raytracer);
 
 		setTimeout(function () {
-			return raytracer.render();
+			return raytracer.renderAnimate();
 		}, 2000); //Do this in a timeout to allow page to finish loading...
 
 		var resizeTimer;
@@ -1110,21 +1220,21 @@ var Math3D = exports.Math3D = function () {
 		}
 	}, {
 		key: "rotateOnArbitrary",
-		value: function rotateOnArbitrary(deg, axis) {
+		value: function rotateOnArbitrary(rad, axis) {
 			//Preconfig
-			var cos = Math.cos(Math.PI / 180 * deg);
-			var sin = Math.sin(Math.PI / 180 * deg);
+			var cos = Math.cos(rad);
+			var sin = Math.sin(rad);
 			var v = Math3D.normalizeVector(axis);
 
 			var data = Math3D.initMatrix(4, 4);
 
 			//Setup Jv Matrix
-			data[0][0] = 0;data[0][1] = -v.z();data[0][2] = v.y();data[0][3] = 0;
-			data[1][0] = v.z();data[1][1] = 0;data[1][2] = -v.x();data[1][3] = 0;
-			data[2][0] = -v.y();data[2][1] = v.x();data[2][2] = 0;data[2][3] = 0;
+			data[0][0] = 0;data[0][1] = -v.z;data[0][2] = v.y;data[0][3] = 0;
+			data[1][0] = v.z;data[1][1] = 0;data[1][2] = -v.x;data[1][3] = 0;
+			data[2][0] = -v.y;data[2][1] = v.x;data[2][2] = 0;data[2][3] = 0;
 			data[3][0] = 0;data[3][1] = 0;data[3][2] = 0;data[3][3] = 1;
 
-			var R = Math3D.addMatrix(Matrices3D.I, MatrixMath3D.addMatrix(Math3D.scalarMultiplyMatrix(data, sin)), Math3D.scalarMultiplyMatrix(Math3D.multiplyMatrices(data, data), 1 - cos));
+			var R = Math3D.addMatrix(Matrices3D.I, Math3D.addMatrix(Math3D.scalarMultiplyMatrix(data, sin), Math3D.scalarMultiplyMatrix(Math3D.multiplyMatrices(data, data), 1 - cos)));
 
 			return R;
 		}
@@ -1882,7 +1992,7 @@ var GenericObject = exports.GenericObject = function () {
 		if (!this.ambientFactor) this.ambientFactor = 0.0;
 		if (!this.diffuseFactor) this.diffuseFactor = 0.2;
 		if (!this.specularFactor) this.specularFactor = 0.5;
-		if (!this.reflectionFactor) this.reflectionFactor = 0.9;
+		if (!this.reflectionFactor) this.reflectionFactor = 0.6;
 		if (!this.refractionFactor) this.refractionFactor = 0.0;
 		if (!this.specularFalloff) this.specularFalloff = 40;
 		if (!this.refractionIndex) this.refractionIndex = 1.0;
