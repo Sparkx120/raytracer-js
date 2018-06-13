@@ -104,7 +104,7 @@ export default function init(){
 		var floor = new Plane({baseC: {r:100, g:100, b:100, a:255},
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0.1,
 			transform: Math3D.transformPipe([
 				Math3D.translate(0, 0, -0.25),
 				Math3D.scale(10, 10, 10),
@@ -116,7 +116,7 @@ export default function init(){
 		var wall1 = new Plane({baseC: {r:100, g:100, b:100, a:255},
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0.1,
 			transform: Math3D.transformPipe([
 				Math3D.translate(-4, -4, 0),
 				Math3D.scale(10, 10, 10),
@@ -124,12 +124,12 @@ export default function init(){
 				
 			])
 		});
-		world.addObject(wall1);
+		// world.addObject(wall1);
 		
 		var wall2 = new Plane({baseC: {r:100, g:100, b:100, a:255},
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0.1,
 			transform: Math3D.transformPipe([
 				Math3D.translate(-4, -4, 0),
 				Math3D.scale(10, 10, 10),
@@ -137,7 +137,7 @@ export default function init(){
 				
 			])
 		});
-		world.addObject(wall2);
+		// world.addObject(wall2);
 
 		var wall3 = new Plane({baseC: {r:100, g:100, b:100, a:255},
 			diffuseFactor: 0.8,
@@ -170,15 +170,15 @@ export default function init(){
 			specularFactor: 0.1,
 			reflectionFactor: 0.003,
 			transform: Math3D.transformPipe([
-				Math3D.translate(0, 0, 3.75),
+				Math3D.translate(0, 0, 9),
 				Math3D.scale(10, 10, 10),
-				Math3D.rotateOnArbitrary(Math.PI, {x:1, y:1, z:0, h:1})
+				Math3D.rotateOnArbitrary(Math.PI, {x:0, y:0, z:1, h:1})
 			])
 		});
-		//world.addObject(cieling);
+		// world.addObject(cieling);
 		
-		var olight = new OmniLight({intensity:2.0,
-									source:{x:2, y:1, z: 3, h:1}}); //Create an OmniLight
+		var olight = new OmniLight({intensity:2.5,
+									source:{x:-2, y:-1, z: 3, h:1}}); //Create an OmniLight
 
 		world.addLight(olight);
 					// new OmniLight({intensity:1.0,
@@ -197,7 +197,7 @@ export default function init(){
 
 		console.log(raytracer);
 
-		setTimeout(()=>raytracer.renderAnimate(),2000) //Do this in a timeout to allow page to finish loading...
+		setTimeout(()=>raytracer.render(),2000) //Do this in a timeout to allow page to finish loading...
 
 		var resizeTimer;
 		window.onresize = ()=>{
@@ -206,9 +206,4 @@ export default function init(){
 			resizeTimer = setTimeout(()=>raytracer.render(),100);
 		};
 	};
-
-	// for(var x=0; x<100; x++){
-	// 	// console.log(x);
-	// 	canvas2D.drawPixel({x:x,y:x,r:0,g:0,b:0,a:255});
-	// }
 };

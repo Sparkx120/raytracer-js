@@ -76,6 +76,13 @@ export class Ray{
 		else
 			this.exclusionObj = {};
 
+		if(config.targetPoint)
+			this.tThreshold = -this.rayDetect(config.targetPoint);
+		else
+			this.tThreshold = -Infinity;
+		
+		// console.log(this.tThreshold);
+
 		//Setup Intersect Persistance
 		this.lowestIntersectValue = 0;
 		this.lowestIntersectObject = null;
@@ -90,7 +97,8 @@ export class Ray{
 	 * @param {Object{t, obj}} config Intersection at position t on object obj
 	 */
 	addIntersect(config){
-		if(config.obj != this.exclusionObj && config.t != 0) //Skip 0
+		// console.log(config.t);
+		if(config.obj != this.exclusionObj && config.t != 0 && config.t > this.tThreshold+1) //Skip 0
 			if(config.t && config.obj){
 				var dt = Math3D.scalarMultiply(this.d, config.t);
 				var intersect = Math3D.addPoints(this.e, dt);
@@ -129,7 +137,7 @@ export class Ray{
 			}
 			else{
 				if(this.d.z != 0){
-					t = (point.z - (this.e.z/thid.d.z));
+					t = (point.z - (this.e.z/this.d.z));
 				}
 			}
 		}

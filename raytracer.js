@@ -224,6 +224,12 @@ var _objects = require("./objects");
 
 var _lib = require("./lib");
 
+var _syntheticWebworker = require("synthetic-webworker");
+
+var _syntheticWebworker2 = _interopRequireDefault(_syntheticWebworker);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 var Version = exports.Version = "1.0.0";
@@ -254,7 +260,7 @@ var Raytracer = function () {
 
 		this.pixelRenderer = config.pixelRenderer; //Must support function drawPixel({x, y, r, g, b, a});
 
-		this.backgroundColor = { r: 0, g: 255, b: 0, a: 255 };
+		this.backgroundColor = { r: 0, g: 0, b: 0, a: 255 };
 		this.color = { r: 100, g: 100, b: 100, a: 255 };
 
 		this.falloffFactor = 10;
@@ -262,6 +268,9 @@ var Raytracer = function () {
 
 		this.running = false;
 		this.noplaceholder = false;
+
+		this.parallelism = 1;
+		this.renderThreads = [];
 
 		this.drawTitle();
 	}
@@ -321,6 +330,30 @@ var Raytracer = function () {
 
 			if (this.pixelRenderer.container) this.pixelRenderer.container.appendChild(this.progress);
 		}
+
+		/**
+   * Draw Controls over the render
+   */
+
+	}, {
+		key: "drawControls",
+		value: function drawControls() {
+			var _this = this;
+
+			this.animateBtn = document.createElement("button");
+			this.animateBtn.innerHTML = "Animate";
+			this.animateBtn.onclick = function () {
+				return _this.renderAnimated();
+			};
+			this.animateBtn.style.position = "absolute";
+			this.animateBtn.style.left = "0";
+			this.animateBtn.style.top = "0";
+			this.animateBtn.style.zindex = "100";
+
+			if (this.pixelRenderer.container) {
+				this.pixelRenderer.container.appendChild(this.animateBtn);
+			}
+		}
 	}, {
 		key: "getObjectList",
 		value: function getObjectList() {
@@ -342,64 +375,82 @@ var Raytracer = function () {
 			}
 		}
 	}, {
-		key: "renderAnimate",
-		value: function renderAnimate() {
-			var _this = this;
+		key: "renderAnimated",
+		value: function renderAnimated() {
+			var _this2 = this;
 
-			this.running = true;
+			if (this.running) {
+				clearInterval(this.timeint);
+			}
 			var counter = 0;
 			this.pixelRenderer.setSupersampling(0.15);
 
-			this.timeint = setInterval(function () {
-				if (!_this.running) {
-					clearInterval(_this.timeint);
+			this.running = true;
+			//Multithreaded Animation
+			if (this.parallelism > 1) {
+				for (var i = 0; i < this.parallelism; i++) {
+					this.renderThreads[i] = new _syntheticWebworker2.default(this._renderLineT, function (e) {
+						e.data.line.map(function (intensity, idx) {
+							_this2.canvas2d.drawBufferedPixel(_this2._pixelShader(e.data.Px, idx, intensity, _this2.shader));
+						});
+						_this2.heightScalar = e.data.heightScalar;
+						if ( /*e.data.Px % (width*xSkip) <= 1 ||*/e.data.Px > width - xSkip - 1) _this2.canvas2d.flushBuffer();
+						if (e.data.Px >= width - (xSkip - i)) _this2.renderThreads[i].terminate();
+					});
+
+					rConfig.xInit = i;
+					this.renderThreads[i].postMessage(rConfig);
 				}
-				//Move by chord length on circle (ie edge of segment)
-				_this.camera = new _lib.Camera({
-					position: { x: 2 * Math.sin(counter), y: 2 * Math.cos(counter), z: 2 * (Math.sin(counter / 2) + 1), h: 1 },
-					gaze: { x: 0, y: 0, z: 0.25, h: 1 },
-					width: _this.pixelRenderer.getWidth(),
-					height: _this.pixelRenderer.getHeight(),
-					viewingAngle: 60,
-					world: null,
-					noPipe: true
-				});
-				// this.camera.setupVectors();
+			} else {
+				this.timeint = setInterval(function () {
+					if (!_this2.running) {
+						clearInterval(_this2.timeint);
+					}
+					//Move by chord length on circle (ie edge of segment)
+					_this2.camera = new _lib.Camera({
+						position: { x: 2 * Math.sin(counter), y: 2 * Math.cos(counter), z: 2 * (Math.sin(Math.PI + counter / 2) + 1), h: 1 },
+						gaze: { x: 0, y: 0, z: 0.25, h: 1 },
+						width: _this2.pixelRenderer.getWidth(),
+						height: _this2.pixelRenderer.getHeight(),
+						viewingAngle: 60,
+						world: null,
+						noPipe: true
+					});
 
-				//Render image
-				for (var i = 0; i <= _this.camera.y; i++) {
-					_this._renderLine(i, true);
-				}
+					//Render image
+					for (var i = 0; i <= _this2.camera.y; i++) {
+						_this2._renderLine(i, true);
+					}
 
-				// var i = 0;
-				// this.timeint = setInterval(()=>{
-				// 	i++;
-				// 	this._renderLine(i, false, this.timeint);
-				// }, 0);
-
-				counter += Math.PI / 20;
-				// this.running = false;
-			}, 0);
+					counter += Math.PI / 20;
+					// this.running = false;
+				}, 0);
+			}
 		}
 	}, {
 		key: "render",
 		value: function render() {
-			var _this2 = this;
+			var _this3 = this;
 
-			if (!this.noplaceholder) this.drawRenderingPlaceholder();
+			if (!this.noplaceholder) {
+				this.drawRenderingPlaceholder();
+				this.drawControls();
+			}
+			this.pixelRenderer.setSupersampling(1.5);
 
 			//Give canvas async time to update
+			this.running = true;
 			var renderLoop = setTimeout(function () {
-				_this2.pixelRenderer.clearBuffer();
-				_this2.camera.width = _this2.pixelRenderer.getWidth();
-				_this2.camera.height = _this2.pixelRenderer.getHeight();
-				_this2.camera.setupVectors();
+				_this3.pixelRenderer.clearBuffer();
+				_this3.camera.width = _this3.pixelRenderer.getWidth();
+				_this3.camera.height = _this3.pixelRenderer.getHeight();
+				_this3.camera.setupVectors();
 
 				//Run outerloop in interval so canvas can live update
 				var i = 0;
-				_this2.timeint = setInterval(function () {
+				_this3.timeint = setInterval(function () {
 					i++;
-					_this2._renderLine(i, true, _this2.timeint);
+					_this3._renderLine(i, true, _this3.timeint);
 				}, 0);
 			}, 0);
 		}
@@ -409,7 +460,46 @@ var Raytracer = function () {
 			if (i < this.camera.y) {
 				for (var j = 0; j < this.camera.x; j++) {
 					var ray = new _lib.Ray({ x: j, y: i, camera: this.camera, depth: 0 });
-					var color = this.raytrace(ray);
+					var color = this.raytrace(ray, null, null, this.getObjectList(), this.getLightList(), this.backgroundColor);
+					var pixel = color;
+					pixel.x = j;
+					pixel.y = i;
+					this.pixelRenderer.drawBufferedPixel(pixel);
+				}
+				if (enableFlush) this.pixelRenderer.flushBuffer();
+
+				//Update Progress Bar
+				var progress = Math.floor(i / this.camera.y * 100);
+				if (this.progress && this.progress.value != progress) {
+					this.progress.value = progress;
+				}
+				if (interval && !this.running) {
+					clearInterval(interval);
+				}
+			} else {
+				//Get rid of the Progress Bar
+				if (this.progress) {
+					this.pixelRenderer.container.removeChild(this.progress);
+					this.progress = null;
+				}
+				// this.pixelRenderer.flushBuffer();
+				if (interval) {
+					clearInterval(interval);
+				}
+			}
+		}
+
+		//Incomplete
+
+	}, {
+		key: "_renderLineT",
+		value: function _renderLineT(i, config) {
+			var objectList = config.objectList();
+			var lightList = config.lightList();
+			if (i < config.camera.y) {
+				for (var j = 0; j < config.camera.x; j++) {
+					var ray = new _lib.Ray({ x: j, y: i, camera: config.camera, depth: 0 });
+					var color = this.raytrace(ray, null, null, objectList, lightList, config.backgroundColor);
 					var pixel = color;
 					pixel.x = j;
 					pixel.y = i;
@@ -436,11 +526,8 @@ var Raytracer = function () {
 		}
 	}, {
 		key: "raytrace",
-		value: function raytrace(ray, recursion, objR) {
-			if (recursion && recusion > this.recursionFactor) return { r: 0, g: 0, b: 0, a: 0 };
-
-			var objList = this.getObjectList();
-			var lightList = this.getLightList();
+		value: function raytrace(ray, recursion, objR, objList, lightList, backgroundColor) {
+			if (recursion && recursion > this.recursionFactor) return { r: 0, g: 0, b: 0, a: 0 };
 
 			objList.map(function (obj) {
 				if (objR) {
@@ -466,12 +553,12 @@ var Raytracer = function () {
 				var reflectionColor = { r: 0, g: 0, b: 0, a: 0 };
 				var refractionColor = { r: 0, g: 0, b: 0, a: 0 };
 
-				if (this.getLightList()) {
-					if (object.diffuseFactor > 0) diffuseColor = this._diffuseShader(ray);
-					if (object.specularFactor > 0) specularColor = this._specularShader(ray);
-					if (object.reflectionFactor > 0) reflectionColor = this._reflectionShader(ray);
+				if (lightList) {
+					if (object.diffuseFactor > 0) diffuseColor = this._diffuseShader(ray, objList, lightList);
+					if (object.specularFactor > 0) specularColor = this._specularShader(ray, objList, lightList);
+					if (object.reflectionFactor > 0) reflectionColor = this._reflectionShader(ray, recursion, objList, lightList);
 					if (object.refractionFactor > 0) {
-						refractionColor = this._refractionShader(ray, recursion);
+						refractionColor = this._refractionShader(ray, recursion, objList, lightList);
 					}
 				}
 
@@ -499,8 +586,8 @@ var Raytracer = function () {
 		}
 	}, {
 		key: "_diffuseShader",
-		value: function _diffuseShader(ray) {
-			var _this3 = this;
+		value: function _diffuseShader(ray, objList, lightList) {
+			var _this4 = this;
 
 			var object = ray.lowestIntersectObject;
 			var intersect = ray.lowestIntersectPoint;
@@ -517,8 +604,8 @@ var Raytracer = function () {
 					var v = _lib.Math3D.vectorizePoints(intersect, ray.e);
 					var ns = _lib.Math3D.dotProduct(n, s);
 
-					var shadowDetect = new _lib.Ray({ e: intersect, d: s, exclusionObj: object });
-					_this3.getObjectList().map(function (obj) {
+					var shadowDetect = new _lib.Ray({ e: intersect, d: s, exclusionObj: object, targetPoint: light.source });
+					_this4.getObjectList().map(function (obj) {
 						obj.rayIntersect(shadowDetect);
 					});
 
@@ -528,10 +615,13 @@ var Raytracer = function () {
 
 						//Compute Diffuse Intensity
 						var div = _lib.Math3D.magnitudeOfVector(s) * _lib.Math3D.magnitudeOfVector(n);
+
 						if (div != 0) {
 							var nDots = ns / div;
 							var diffuseIntensity = light.intensity * Math.max(nDots, 0);
 							totalIntensity += diffuseIntensity;
+						} else {
+							console.log(div);
 						}
 					}
 				});
@@ -545,8 +635,8 @@ var Raytracer = function () {
 		}
 	}, {
 		key: "_specularShader",
-		value: function _specularShader(ray) {
-			var _this4 = this;
+		value: function _specularShader(ray, objList, lightList) {
+			var _this5 = this;
 
 			var object = ray.lowestIntersectObject;
 			var intersect = ray.lowestIntersectPoint;
@@ -563,7 +653,7 @@ var Raytracer = function () {
 					var ns = _lib.Math3D.dotProduct(n, s);
 
 					var shadowDetect = new _lib.Ray({ e: intersect, d: s, exclusionObj: object });
-					_this4.getObjectList().map(function (obj) {
+					_this5.getObjectList().map(function (obj) {
 						obj.rayIntersect(shadowDetect);
 					});
 					if (!shadowDetect.intersectedObject) {
@@ -602,7 +692,7 @@ var Raytracer = function () {
 		}
 	}, {
 		key: "_reflectionShader",
-		value: function _reflectionShader(ray) {
+		value: function _reflectionShader(ray, recursion, objList, lightList) {
 			var object = ray.lowestIntersectObject;
 			var intersect = ray.lowestIntersectPoint;
 			var norm = object.getNormalAt(intersect);
@@ -615,7 +705,7 @@ var Raytracer = function () {
 				reflectionD = _lib.Math3D.normalizeVector(reflectionD);
 
 				var incident = new _lib.Ray({ e: intersect, d: reflectionD, depth: ray.depth + 1, exclusionObj: object });
-				var reflection = this.raytrace(incident); //uses incident object detection aka this obj
+				var reflection = this.raytrace(incident, recursion + 1, null, objList, lightList); //uses incident object detection aka this obj
 				return {
 					r: reflection.r,
 					g: reflection.g,
@@ -627,7 +717,7 @@ var Raytracer = function () {
 		}
 	}, {
 		key: "_refractionShader",
-		value: function _refractionShader(ray, recursion) {
+		value: function _refractionShader(ray, recursion, objList, lightList) {
 			var object = ray.lowestIntersectObject;
 			var intersect = ray.lowestIntersectPoint;
 			var norm = object.getNormalAt(intersect);
@@ -659,7 +749,7 @@ var Raytracer = function () {
 				object.rayIntersect(refracted);
 				if (refracted.intersectedObject) refracted = new _lib.Ray({ e: refracted.lowestIntersectPoint, d: ray.d });
 
-				refraction = this.raytrace(refracted, recursion + 1, object); //Detect object
+				refraction = this.raytrace(refracted, recursion + 1, object, objList, lightList); //Detect object
 			}
 
 			return {
@@ -675,7 +765,7 @@ var Raytracer = function () {
 
 exports.default = Raytracer;
 
-},{"./lib":9,"./objects":15}],4:[function(require,module,exports){
+},{"./lib":9,"./objects":15,"synthetic-webworker":16}],4:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -795,7 +885,7 @@ function init() {
 		var floor = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0.1,
 			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(0, 0, -0.25), _lib.Math3D.scale(10, 10, 10)]),
 			restricted: true
 		});
@@ -804,18 +894,18 @@ function init() {
 		var wall1 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0.1,
 			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(-4, -4, 0), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(Math.PI / 2, { x: 0, y: 1, z: 0, h: 1 })])
 		});
-		world.addObject(wall1);
+		// world.addObject(wall1);
 
 		var wall2 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0.1,
 			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(-4, -4, 0), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(-Math.PI / 2, { x: 1, y: 0, z: 0, h: 1 })])
 		});
-		world.addObject(wall2);
+		// world.addObject(wall2);
 
 		var wall3 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
 			diffuseFactor: 0.8,
@@ -837,12 +927,12 @@ function init() {
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
 			reflectionFactor: 0.003,
-			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(0, 0, 3.75), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(Math.PI, { x: 1, y: 1, z: 0, h: 1 })])
+			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(0, 0, 9), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(Math.PI, { x: 0, y: 0, z: 1, h: 1 })])
 		});
-		//world.addObject(cieling);
+		// world.addObject(cieling);
 
-		var olight = new _objects.OmniLight({ intensity: 2.0,
-			source: { x: 2, y: 1, z: 3, h: 1 } }); //Create an OmniLight
+		var olight = new _objects.OmniLight({ intensity: 2.5,
+			source: { x: -2, y: -1, z: 3, h: 1 } }); //Create an OmniLight
 
 		world.addLight(olight);
 		// new OmniLight({intensity:1.0,
@@ -862,7 +952,7 @@ function init() {
 		console.log(raytracer);
 
 		setTimeout(function () {
-			return raytracer.renderAnimate();
+			return raytracer.render();
 		}, 2000); //Do this in a timeout to allow page to finish loading...
 
 		var resizeTimer;
@@ -874,11 +964,6 @@ function init() {
 			}, 100);
 		};
 	};
-
-	// for(var x=0; x<100; x++){
-	// 	// console.log(x);
-	// 	canvas2D.drawPixel({x:x,y:x,r:0,g:0,b:0,a:255});
-	// }
 };
 
 },{"./Raytracer.js":3,"./lib":9,"./objects":15,"canvas-2d-framework":1}],5:[function(require,module,exports){
@@ -1730,6 +1815,10 @@ var Ray = exports.Ray = function () {
 
 		if (config.exclusionObj) this.exclusionObj = config.exclusionObj;else this.exclusionObj = {};
 
+		if (config.targetPoint) this.tThreshold = -this.rayDetect(config.targetPoint);else this.tThreshold = -Infinity;
+
+		// console.log(this.tThreshold);
+
 		//Setup Intersect Persistance
 		this.lowestIntersectValue = 0;
 		this.lowestIntersectObject = null;
@@ -1748,7 +1837,8 @@ var Ray = exports.Ray = function () {
 	_createClass(Ray, [{
 		key: "addIntersect",
 		value: function addIntersect(config) {
-			if (config.obj != this.exclusionObj && config.t != 0) //Skip 0
+			// console.log(config.t);
+			if (config.obj != this.exclusionObj && config.t != 0 && config.t > this.tThreshold + 1) //Skip 0
 				if (config.t && config.obj) {
 					var dt = _Math3D.Math3D.scalarMultiply(this.d, config.t);
 					var intersect = _Math3D.Math3D.addPoints(this.e, dt);
@@ -1789,7 +1879,7 @@ var Ray = exports.Ray = function () {
 					t = point.y - this.e.y / this.d.y;
 				} else {
 					if (this.d.z != 0) {
-						t = point.z - this.e.z / thid.d.z;
+						t = point.z - this.e.z / this.d.z;
 					}
 				}
 			}
@@ -2404,4 +2494,74 @@ Object.keys(_Sphere).forEach(function (key) {
   });
 });
 
-},{"./GenericObject.js":10,"./Light.js":11,"./OmniLight.js":12,"./Plane.js":13,"./Sphere.js":14}]},{},[2]);
+},{"./GenericObject.js":10,"./Light.js":11,"./OmniLight.js":12,"./Plane.js":13,"./Sphere.js":14}],16:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+/**
+ * Synthetic Worker Class
+ * 
+ * Alows a worker to be made without an external file.
+ * 
+ * workfunc is the body of the onmessage listener in the worker
+ * onMsg is the parents listener for postedMessages from your workfunc
+ * 
+ * please terminate the worker when it finishes.
+ * 
+ * @author  James Wake (SparkX120)
+ * @version 0.0.5 (2017/12)
+ * @license MIT
+ */
+var SyntheticWorker = function () {
+    function SyntheticWorker(workerfunc, onMsg) {
+        _classCallCheck(this, SyntheticWorker);
+
+        var funcStr = workerfunc.toString();
+
+        if (funcStr.indexOf("function") == 0) {
+            //Fix for next Fix for when Compiled
+            funcStr = funcStr.replace("function", "");
+        }
+        if (funcStr.indexOf("prototype.") >= 0) {
+            //Fix for IE when not Compiled
+            funcStr = funcStr.replace("prototype.", "");
+        }
+        // Make a worker from an anonymous function body that instantiates the workerFunction as an onmessage callback
+        var blob = new Blob(['(function(global) { global.addEventListener(\'message\', function(e) {', 'var cb = function ', funcStr, ';', 'cb(e)', '}, false); } )(this)'], { type: 'application/javascript' });
+        this.blobURL = URL.createObjectURL(blob); //Generate the Blob URL
+
+        this.worker = new Worker(this.blobURL);
+        // Cleanup
+        this.worker.onmessage = function (e) {
+            if (e.data.term) worker.terminate();else if (onMsg) onMsg(e);
+        };
+    }
+
+    _createClass(SyntheticWorker, [{
+        key: "terminate",
+        value: function terminate() {
+            if (this.worker) {
+                this.worker.terminate();
+                URL.revokeObjectURL(this.blobURL);
+            }
+        }
+    }, {
+        key: "postMessage",
+        value: function postMessage(msg) {
+            if (this.worker) this.worker.postMessage(msg);
+        }
+    }]);
+
+    return SyntheticWorker;
+}();
+
+exports.default = SyntheticWorker;
+
+},{}]},{},[2]);

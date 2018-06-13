@@ -1,5 +1,6 @@
 import {GenericObject, Light} from "./objects";
 import {Camera, Ray, Math3D, Matrices3D, World} from "./lib";
+import SyntheticWorker from "synthetic-webworker";
 
 export const Version = "1.0.0"
 if(window){
@@ -30,7 +31,7 @@ export default class Raytracer{
 
 		this.pixelRenderer = config.pixelRenderer; //Must support function drawPixel({x, y, r, g, b, a});
 
-		this.backgroundColor = {r: 0, g: 255, b: 0, a: 255};
+		this.backgroundColor = {r: 0, g: 0, b: 0, a: 255};
 		this.color = {r: 100, g: 100, b: 100, a: 255};
 
 		this.falloffFactor = 10;
@@ -38,6 +39,9 @@ export default class Raytracer{
 
 		this.running = false;
 		this.noplaceholder = false;
+
+		this.parallelism = 1;
+		this.renderThreads = [];
 
 		this.drawTitle();
 	}
@@ -92,6 +96,24 @@ export default class Raytracer{
 		if(this.pixelRenderer.container)
 			this.pixelRenderer.container.appendChild(this.progress);
 	}
+
+	/**
+	 * Draw Controls over the render
+	 */
+	drawControls(){
+		this.animateBtn = document.createElement("button");
+		this.animateBtn.innerHTML = "Animate";
+		this.animateBtn.onclick = ()=>this.renderAnimated();
+		this.animateBtn.style.position = "absolute";
+		this.animateBtn.style.left = "0";
+		this.animateBtn.style.top = "0";
+		this.animateBtn.style.zindex = "100"
+
+
+		if(this.pixelRenderer.container){
+			this.pixelRenderer.container.appendChild(this.animateBtn);
+		}
+	}
 	
 	getObjectList(){
 		return this.world.getObjects();
@@ -110,48 +132,69 @@ export default class Raytracer{
 		}
 	}
 
-	renderAnimate(){
-		this.running = true;
+	renderAnimated(){
+		if(this.running){
+			clearInterval(this.timeint);
+		}
 		let counter = 0;
 		this.pixelRenderer.setSupersampling(0.15);
-		
-		this.timeint = setInterval(()=>{
-			if(!this.running){
-				clearInterval(this.timeint);
+
+		this.running = true;
+		//Multithreaded Animation
+		if(this.parallelism > 1){
+			for(var i=0; i<this.parallelism; i++){
+				this.renderThreads[i] = new SyntheticWorker(this._renderLineT, (e)=>{
+					e.data.line.map((intensity,idx)=>{
+						this.canvas2d.drawBufferedPixel(this._pixelShader(e.data.Px, idx, intensity, this.shader)); 
+					});
+					this.heightScalar = e.data.heightScalar;
+					if(/*e.data.Px % (width*xSkip) <= 1 ||*/ e.data.Px > width-xSkip-1)
+						this.canvas2d.flushBuffer();   
+					if(e.data.Px >= width-(xSkip-i))
+						this.renderThreads[i].terminate();
+				});
+				
+				rConfig.xInit = i;
+				this.renderThreads[i].postMessage(rConfig);
 			}
-			//Move by chord length on circle (ie edge of segment)
-			this.camera = new Camera({
-				position:     {x:2*Math.sin(counter), y:2*Math.cos(counter), z:2*(Math.sin(counter/2)+1), h:1},
-				gaze:         {x:0, y:0,  z:0.25, h:1},
-				width:        this.pixelRenderer.getWidth(),
-				height:       this.pixelRenderer.getHeight(),
-				viewingAngle: 60,
-				world:        null,
-				noPipe:       true
-			});
-			// this.camera.setupVectors();
+		}
 
-			//Render image
-			for(var i=0;i<=this.camera.y;i++){
-				this._renderLine(i, true);
-			}
-
-			// var i = 0;
-			// this.timeint = setInterval(()=>{
-			// 	i++;
-			// 	this._renderLine(i, false, this.timeint);
-			// }, 0);
-
-			counter += Math.PI/20;
-			// this.running = false;
-		},0);
+		else{
+			this.timeint = setInterval(()=>{
+				if(!this.running){
+					clearInterval(this.timeint);
+				}
+				//Move by chord length on circle (ie edge of segment)
+				this.camera = new Camera({
+					position:     {x:2*Math.sin(counter), y:2*Math.cos(counter), z:2*(Math.sin(Math.PI+counter/2)+1), h:1},
+					gaze:         {x:0, y:0,  z:0.25, h:1},
+					width:        this.pixelRenderer.getWidth(),
+					height:       this.pixelRenderer.getHeight(),
+					viewingAngle: 60,
+					world:        null,
+					noPipe:       true
+				});
+	
+				//Render image
+				for(var i=0;i<=this.camera.y;i++){
+					this._renderLine(i, true);
+				}
+	
+				counter += Math.PI/20;
+				// this.running = false;
+			},0);
+		}
 	}
 
 	render(){
-		if(!this.noplaceholder)
+		if(!this.noplaceholder){
 			this.drawRenderingPlaceholder();
+			this.drawControls();
+		}
+		this.pixelRenderer.setSupersampling(1.5);
 
 		//Give canvas async time to update
+		this.running = true;
 		var renderLoop = setTimeout(()=>{
 			this.pixelRenderer.clearBuffer();
 			this.camera.width = this.pixelRenderer.getWidth();
@@ -173,7 +216,45 @@ export default class Raytracer{
 		if(i<this.camera.y){
 			for(var j=0; j<this.camera.x; j++){
 				var ray   = new Ray({x: j, y:i, camera: this.camera, depth: 0});
-				var color = this.raytrace(ray);
+				var color = this.raytrace(ray, null, null, this.getObjectList(), this.getLightList(), this.backgroundColor);
+				var pixel = color;
+				pixel.x = j;
+				pixel.y = i;
+				this.pixelRenderer.drawBufferedPixel(pixel);
+			}
+			if(enableFlush)
+				this.pixelRenderer.flushBuffer();
+
+			//Update Progress Bar
+			var progress = Math.floor((i/this.camera.y)*100);
+			if(this.progress && this.progress.value != progress){
+				this.progress.value = progress;
+			}
+			if(interval && !this.running){
+				clearInterval(interval);
+			}
+
+		}else{
+			//Get rid of the Progress Bar
+			if(this.progress){
+				this.pixelRenderer.container.removeChild(this.progress);
+				this.progress = null;
+			}
+			// this.pixelRenderer.flushBuffer();
+			if(interval){
+				clearInterval(interval);
+			}
+		}
+	}
+
+	//Incomplete
+	_renderLineT(i, config){
+		let objectList = config.objectList();
+		let lightList  = config.lightList();
+		if(i<config.camera.y){
+			for(var j=0; j<config.camera.x; j++){
+				var ray   = new Ray({x: j, y:i, camera: config.camera, depth: 0});
+				var color = this.raytrace(ray, null, null, objectList, lightList, config.backgroundColor);
 				var pixel = color;
 				pixel.x = j;
 				pixel.y = i;
@@ -203,11 +284,8 @@ export default class Raytracer{
 
 	
 
-	raytrace(ray, recursion, objR){
-		if(recursion && recusion > this.recursionFactor) return {r:0, g:0, b:0, a:0};
-
-		var objList   = this.getObjectList();
-		var lightList = this.getLightList();
+	raytrace(ray, recursion, objR, objList, lightList, backgroundColor){
+		if(recursion && recursion > this.recursionFactor) return {r:0, g:0, b:0, a:0};
 
 		objList.map((obj)=>{
 			if(objR){ //Don't intersect with self surface under recursion
@@ -227,21 +305,21 @@ export default class Raytracer{
 			var reflectionFactor = object.reflectionFactor;
 			var refractionFactor = object.refractionFactor;
 
-			var ambientColor   = object.ambientC;
-			var diffuseColor   = {r:0,g:0,b:0,a:0};
-			var specularColor  = {r:0,g:0,b:0,a:0};
-			var reflectionColor  = {r:0,g:0,b:0,a:0};
-			var refractionColor = {r:0,g:0,b:0,a:0};
+			var ambientColor	= object.ambientC;
+			var diffuseColor	= {r:0,g:0,b:0,a:0};
+			var specularColor	= {r:0,g:0,b:0,a:0};
+			var reflectionColor	= {r:0,g:0,b:0,a:0};
+			var refractionColor	= {r:0,g:0,b:0,a:0};
 
-			if(this.getLightList()){
+			if(lightList){
 				if(object.diffuseFactor>0)
-					diffuseColor   = this._diffuseShader(ray);
+					diffuseColor	= this._diffuseShader(ray, objList, lightList);
 				if(object.specularFactor>0)
-					specularColor  = this._specularShader(ray);	
+					specularColor	= this._specularShader(ray, objList, lightList);	
 				if(object.reflectionFactor>0)
-					reflectionColor  = this._reflectionShader(ray);
+					reflectionColor	= this._reflectionShader(ray, recursion, objList, lightList);
 				if(object.refractionFactor>0){
-					refractionColor = this._refractionShader(ray, recursion);
+					refractionColor	= this._refractionShader(ray, recursion, objList, lightList);
 				}
 			}
 			
@@ -270,7 +348,7 @@ export default class Raytracer{
 		};
 	}
 
-	_diffuseShader(ray){
+	_diffuseShader(ray,objList, lightList){
 		var object        = ray.lowestIntersectObject;
 		var intersect     = ray.lowestIntersectPoint;
 		var n             = object.getNormalAt(intersect);
@@ -286,7 +364,7 @@ export default class Raytracer{
 				var v	= Math3D.vectorizePoints(intersect, ray.e);
 				var ns	= Math3D.dotProduct(n, s);
 
-				var shadowDetect = new Ray({e:intersect, d: s, exclusionObj: object});
+				var shadowDetect = new Ray({e:intersect, d: s, exclusionObj: object, targetPoint: light.source});
 				this.getObjectList().map((obj)=>{
 					obj.rayIntersect(shadowDetect)
 				});	
@@ -297,11 +375,15 @@ export default class Raytracer{
 
 					//Compute Diffuse Intensity
 					var div = Math3D.magnitudeOfVector(s)*Math3D.magnitudeOfVector(n);
+					
 					if(div != 0){
 						var nDots = ns/(div);
 						var diffuseIntensity = (light.intensity*Math.max(nDots, 0));
-						totalIntensity += diffuseIntensity;	
+						totalIntensity += diffuseIntensity;
 					}	
+					else{
+						console.log(div)
+					}
 				}
 			});
 		}
@@ -313,7 +395,7 @@ export default class Raytracer{
 			a:255}
 	}
 
-	_specularShader(ray){
+	_specularShader(ray, objList, lightList){
 		var object        = ray.lowestIntersectObject;
 		var intersect     = ray.lowestIntersectPoint;
 		var n             = object.getNormalAt(intersect);
@@ -370,7 +452,7 @@ export default class Raytracer{
 			a:255}
 	}
 
-	_reflectionShader(ray){
+	_reflectionShader(ray, recursion, objList, lightList){
 		var object        = ray.lowestIntersectObject;
 		var intersect     = ray.lowestIntersectPoint;
 		var norm          = object.getNormalAt(intersect);
@@ -383,7 +465,7 @@ export default class Raytracer{
 			reflectionD = Math3D.normalizeVector(reflectionD);
 
 			var incident = new Ray({e:intersect, d:reflectionD, depth: ray.depth+1, exclusionObj: object});	
-			var reflection = this.raytrace(incident); //uses incident object detection aka this obj
+			var reflection = this.raytrace(incident, recursion+1, null, objList, lightList); //uses incident object detection aka this obj
 			return {
 			r:reflection.r,
 			g:reflection.g,
@@ -394,7 +476,7 @@ export default class Raytracer{
 		return this.backgroundColor;
 	}
 
-	_refractionShader(ray, recursion){
+	_refractionShader(ray, recursion, objList, lightList){
 		var object        = ray.lowestIntersectObject;
 		var intersect     = ray.lowestIntersectPoint;
 		var norm          = object.getNormalAt(intersect);
@@ -427,7 +509,7 @@ export default class Raytracer{
 			if(refracted.intersectedObject)
 				refracted = new Ray({e:refracted.lowestIntersectPoint, d:ray.d});
 			
-			refraction = this.raytrace(refracted, recursion+1, object); //Detect object
+			refraction = this.raytrace(refracted, recursion+1, object, objList, lightList); //Detect object
 			
 		}
 				

@@ -1,3 +1,6 @@
 [submodule "canvas-2d-framework"]
 	path = canvas-2d-framework
 	url = git@github.com:Sparkx120/canvas-2d-framework.git
+[submodule "synthetic-webworker"]
+	path = synthetic-webworker
+	url = git@github.com:Sparkx120/synthetic-webworker.git
