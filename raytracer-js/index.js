@@ -87,24 +87,10 @@ export default function init(){
 			}
 		}
 
-		// world.push(new Sphere({
-		// 	baseC: {r:0, g:0, b:255, a:255},
-		// 	specularC: {r:255, g:255, b:255, a:255},
-		// 	transform: Math3D.translate(2, 2, 0.5)
-		// })); //Create Generic Sphere
-		// world.push(new Sphere({
-		// 	baseC: {r:0, g:0, b:255, a:255},
-		// 	specularC: {r:255, g:255, b:255, a:255},
-		// 	transform: Math3D.transformPipe([
-		// 				Math3D.translate(-1, -1, 0.5),
-		// 				Math3D.scale(0.5, 0.5, 0.5)
-		// 			])
-		// })); //Create Generic Sphere
-
 		var floor = new Plane({baseC: {r:100, g:100, b:100, a:255},
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.1,
+			reflectionFactor: 0.2,
 			transform: Math3D.transformPipe([
 				Math3D.translate(0, 0, -0.25),
 				Math3D.scale(10, 10, 10),
@@ -181,15 +167,8 @@ export default function init(){
 									source:{x:-2, y:-1, z: 3, h:1}}); //Create an OmniLight
 
 		world.addLight(olight);
-					// new OmniLight({intensity:1.0,
-					// 				source:{x:0, y:2, z: 0.2, h:1}}),
-					// new OmniLight({intensity:1.0,
-					// 				source:{x:0, y:-2, z: 0.2, h:1}}),
-					// new OmniLight({intensity:1.0,
-					// 				source:{x:2, y:0, z: 0.2, h:1}}),
-					// new OmniLight({intensity:1.0,
-					// 				source:{x:-2, y:0, z: 0.2, h:1}}))
 
+		// Setup Raytracer and Kick it off
 		var raytracer = new Raytracer({
 			world: world,
 			pixelRenderer: window.canvas2D

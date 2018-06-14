@@ -2,7 +2,7 @@ import {GenericObject, Light} from "./objects";
 import {Camera, Ray, Math3D, Matrices3D, World} from "./lib";
 import SyntheticWorker from "synthetic-webworker";
 
-export const Version = "1.0.0"
+export const Version = "1.1.0a"
 if(window){
 	window.raytracer_version = Version;
 }
@@ -99,30 +99,49 @@ export default class Raytracer{
 
 	/**
 	 * Draw Controls over the render
+	 * 
+	 * TODO Consider adding this to Canvas 2D and making it configurable
+	 * for my other projects
 	 */
 	drawControls(){
+		this.controlContainer = document.createElement("div");
+		this.controlContainer.style.position = "absolute";
+		this.controlContainer.style.right = "0";
+		this.controlContainer.style.top = "0";
+		this.controlContainer.style.zindex = "100"
+
 		this.animateBtn = document.createElement("button");
 		this.animateBtn.innerHTML = "Animate";
 		this.animateBtn.onclick = ()=>this.renderAnimated();
-		this.animateBtn.style.position = "absolute";
-		this.animateBtn.style.left = "0";
-		this.animateBtn.style.top = "0";
-		this.animateBtn.style.zindex = "100"
-
+		this.controlContainer.appendChild(this.animateBtn);
 
 		if(this.pixelRenderer.container){
-			this.pixelRenderer.container.appendChild(this.animateBtn);
+			this.pixelRenderer.container.appendChild(this.controlContainer);
 		}
 	}
 	
+	/**
+	 * Gets the Array of Objects in the world (Wrapper Function)
+	 * 
+	 * @returns {[GenericObject]} The Array of Generic Objects in the world
+	 */
 	getObjectList(){
 		return this.world.getObjects();
 	}
 
+	/**
+	 * Gets the Array of Lights in the world (Wrapper Function)
+	 * 
+	 * @returns {[Light]} The Array of Lights in the world
+	 */
 	getLightList(){
 		return this.world.getLights();
 	}
 
+	/**
+	 * Stop an inprogress render
+	 * Currently unsafe to call before the first render FIXME
+	 */
 	stop(){
 		if(this.timeint){
 			console.log("killing render");
@@ -132,15 +151,18 @@ export default class Raytracer{
 		}
 	}
 
+	/**
+	 * Render in animated mode at some small subsampled rate
+	 */
 	renderAnimated(){
 		if(this.running){
-			clearInterval(this.timeint);
+			this.stop();
 		}
 		let counter = 0;
 		this.pixelRenderer.setSupersampling(0.15);
 
 		this.running = true;
-		//Multithreaded Animation
+		//Multithreaded Animation NOT READY YET
 		if(this.parallelism > 1){
 			for(var i=0; i<this.parallelism; i++){
 				this.renderThreads[i] = new SyntheticWorker(this._renderLineT, (e)=>{
@@ -158,7 +180,7 @@ export default class Raytracer{
 				this.renderThreads[i].postMessage(rConfig);
 			}
 		}
-
+		//Standard Animation on one thread
 		else{
 			this.timeint = setInterval(()=>{
 				if(!this.running){
@@ -186,6 +208,9 @@ export default class Raytracer{
 		}
 	}
 
+	/**
+	 * Render the scene in the world to the pixelrenderer
+	 */
 	render(){
 		if(!this.noplaceholder){
 			this.drawRenderingPlaceholder();
@@ -212,6 +237,14 @@ export default class Raytracer{
 		},0);
 	}
 
+	/**
+	 * Primite single Line Render for use in direct draw.
+	 * 
+	 * @private
+	 * @param {*} i - The pixel line to render
+	 * @param {*} enableFlush - Enables flushing to the PixelRenderer directly here
+	 * @param {*} interval - The Interval this is running in (Maybe removed later)
+	 */
 	_renderLine(i, enableFlush, interval){
 		if(i<this.camera.y){
 			for(var j=0; j<this.camera.x; j++){
@@ -247,7 +280,13 @@ export default class Raytracer{
 		}
 	}
 
-	//Incomplete
+	/**
+	 * Threaded (WebWorker) Line Renderer. NOT COMPLETE
+	 * 
+	 * @private
+	 * @param {*} i - The pixel line to render
+	 * @param {*} config - The state of the raytracer (MAY USE COMPLETELY INITIALIZED RAYTRACING CLASS INSTEAD)
+	 */
 	_renderLineT(i, config){
 		let objectList = config.objectList();
 		let lightList  = config.lightList();
@@ -282,8 +321,15 @@ export default class Raytracer{
 		}
 	}
 
-	
-
+	/**
+	 * Raytrace a single pixel (point)
+	 * @param {Ray} ray - The Ray to raytrace on
+	 * @param {Number} recursion - The recursion depth
+	 * @param {GenericObject} objR  - The object that was recursed on (not necessary for some shaders)
+	 * @param {[GenericObject]} objList - The list of objects in the scene to render (MAY REMOVE LATER)
+	 * @param {[Light]} lightList - The list of lights in the scene to render (MAY REMOVE LATER)
+	 * @param {Pixel} backgroundColor - The background color to use (MAY REMOVE LATER)
+	 */
 	raytrace(ray, recursion, objR, objList, lightList, backgroundColor){
 		if(recursion && recursion > this.recursionFactor) return {r:0, g:0, b:0, a:0};
 

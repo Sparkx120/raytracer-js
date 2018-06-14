@@ -232,7 +232,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Version = exports.Version = "1.0.0";
+var Version = exports.Version = "1.1.0a";
 if (window) {
 	window.raytracer_version = Version;
 }
@@ -333,6 +333,9 @@ var Raytracer = function () {
 
 		/**
    * Draw Controls over the render
+   * 
+   * TODO Consider adding this to Canvas 2D and making it configurable
+   * for my other projects
    */
 
 	}, {
@@ -340,30 +343,53 @@ var Raytracer = function () {
 		value: function drawControls() {
 			var _this = this;
 
+			this.controlContainer = document.createElement("div");
+			this.controlContainer.style.position = "absolute";
+			this.controlContainer.style.right = "0";
+			this.controlContainer.style.top = "0";
+			this.controlContainer.style.zindex = "100";
+
 			this.animateBtn = document.createElement("button");
 			this.animateBtn.innerHTML = "Animate";
 			this.animateBtn.onclick = function () {
 				return _this.renderAnimated();
 			};
-			this.animateBtn.style.position = "absolute";
-			this.animateBtn.style.left = "0";
-			this.animateBtn.style.top = "0";
-			this.animateBtn.style.zindex = "100";
+			this.controlContainer.appendChild(this.animateBtn);
 
 			if (this.pixelRenderer.container) {
-				this.pixelRenderer.container.appendChild(this.animateBtn);
+				this.pixelRenderer.container.appendChild(this.controlContainer);
 			}
 		}
+
+		/**
+   * Gets the Array of Objects in the world (Wrapper Function)
+   * 
+   * @returns {[GenericObject]} The Array of Generic Objects in the world
+   */
+
 	}, {
 		key: "getObjectList",
 		value: function getObjectList() {
 			return this.world.getObjects();
 		}
+
+		/**
+   * Gets the Array of Lights in the world (Wrapper Function)
+   * 
+   * @returns {[Light]} The Array of Lights in the world
+   */
+
 	}, {
 		key: "getLightList",
 		value: function getLightList() {
 			return this.world.getLights();
 		}
+
+		/**
+   * Stop an inprogress render
+   * Currently unsafe to call before the first render FIXME
+   */
+
 	}, {
 		key: "stop",
 		value: function stop() {
@@ -374,19 +400,24 @@ var Raytracer = function () {
 				this.running = false;
 			}
 		}
+
+		/**
+   * Render in animated mode at some small subsampled rate
+   */
+
 	}, {
 		key: "renderAnimated",
 		value: function renderAnimated() {
 			var _this2 = this;
 
 			if (this.running) {
-				clearInterval(this.timeint);
+				this.stop();
 			}
 			var counter = 0;
 			this.pixelRenderer.setSupersampling(0.15);
 
 			this.running = true;
-			//Multithreaded Animation
+			//Multithreaded Animation NOT READY YET
 			if (this.parallelism > 1) {
 				for (var i = 0; i < this.parallelism; i++) {
 					this.renderThreads[i] = new _syntheticWebworker2.default(this._renderLineT, function (e) {
@@ -401,32 +432,39 @@ var Raytracer = function () {
 					rConfig.xInit = i;
 					this.renderThreads[i].postMessage(rConfig);
 				}
-			} else {
-				this.timeint = setInterval(function () {
-					if (!_this2.running) {
-						clearInterval(_this2.timeint);
-					}
-					//Move by chord length on circle (ie edge of segment)
-					_this2.camera = new _lib.Camera({
-						position: { x: 2 * Math.sin(counter), y: 2 * Math.cos(counter), z: 2 * (Math.sin(Math.PI + counter / 2) + 1), h: 1 },
-						gaze: { x: 0, y: 0, z: 0.25, h: 1 },
-						width: _this2.pixelRenderer.getWidth(),
-						height: _this2.pixelRenderer.getHeight(),
-						viewingAngle: 60,
-						world: null,
-						noPipe: true
-					});
-
-					//Render image
-					for (var i = 0; i <= _this2.camera.y; i++) {
-						_this2._renderLine(i, true);
-					}
-
-					counter += Math.PI / 20;
-					// this.running = false;
-				}, 0);
 			}
+			//Standard Animation on one thread
+			else {
+					this.timeint = setInterval(function () {
+						if (!_this2.running) {
+							clearInterval(_this2.timeint);
+						}
+						//Move by chord length on circle (ie edge of segment)
+						_this2.camera = new _lib.Camera({
+							position: { x: 2 * Math.sin(counter), y: 2 * Math.cos(counter), z: 2 * (Math.sin(Math.PI + counter / 2) + 1), h: 1 },
+							gaze: { x: 0, y: 0, z: 0.25, h: 1 },
+							width: _this2.pixelRenderer.getWidth(),
+							height: _this2.pixelRenderer.getHeight(),
+							viewingAngle: 60,
+							world: null,
+							noPipe: true
+						});
+
+						//Render image
+						for (var i = 0; i <= _this2.camera.y; i++) {
+							_this2._renderLine(i, true);
+						}
+
+						counter += Math.PI / 20;
+						// this.running = false;
+					}, 0);
+				}
 		}
+
+		/**
+   * Render the scene in the world to the pixelrenderer
+   */
+
 	}, {
 		key: "render",
 		value: function render() {
@@ -454,6 +492,16 @@ var Raytracer = function () {
 				}, 0);
 			}, 0);
 		}
+
+		/**
+   * Primite single Line Render for use in direct draw.
+   * 
+   * @private
+   * @param {*} i - The pixel line to render
+   * @param {*} enableFlush - Enables flushing to the PixelRenderer directly here
+   * @param {*} interval - The Interval this is running in (Maybe removed later)
+   */
+
 	}, {
 		key: "_renderLine",
 		value: function _renderLine(i, enableFlush, interval) {
@@ -489,7 +537,13 @@ var Raytracer = function () {
 			}
 		}
 
-		//Incomplete
+		/**
+   * Threaded (WebWorker) Line Renderer. NOT COMPLETE
+   * 
+   * @private
+   * @param {*} i - The pixel line to render
+   * @param {*} config - The state of the raytracer (MAY USE COMPLETELY INITIALIZED RAYTRACING CLASS INSTEAD)
+   */
 
 	}, {
 		key: "_renderLineT",
@@ -524,6 +578,17 @@ var Raytracer = function () {
 				}
 			}
 		}
+
+		/**
+   * Raytrace a single pixel (point)
+   * @param {Ray} ray - The Ray to raytrace on
+   * @param {Number} recursion - The recursion depth
+   * @param {GenericObject} objR  - The object that was recursed on (not necessary for some shaders)
+   * @param {[GenericObject]} objList - The list of objects in the scene to render (MAY REMOVE LATER)
+   * @param {[Light]} lightList - The list of lights in the scene to render (MAY REMOVE LATER)
+   * @param {Pixel} backgroundColor - The background color to use (MAY REMOVE LATER)
+   */
+
 	}, {
 		key: "raytrace",
 		value: function raytrace(ray, recursion, objR, objList, lightList, backgroundColor) {
@@ -868,24 +933,10 @@ function init() {
 			}
 		}
 
-		// world.push(new Sphere({
-		// 	baseC: {r:0, g:0, b:255, a:255},
-		// 	specularC: {r:255, g:255, b:255, a:255},
-		// 	transform: Math3D.translate(2, 2, 0.5)
-		// })); //Create Generic Sphere
-		// world.push(new Sphere({
-		// 	baseC: {r:0, g:0, b:255, a:255},
-		// 	specularC: {r:255, g:255, b:255, a:255},
-		// 	transform: Math3D.transformPipe([
-		// 				Math3D.translate(-1, -1, 0.5),
-		// 				Math3D.scale(0.5, 0.5, 0.5)
-		// 			])
-		// })); //Create Generic Sphere
-
 		var floor = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.1,
+			reflectionFactor: 0.2,
 			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(0, 0, -0.25), _lib.Math3D.scale(10, 10, 10)]),
 			restricted: true
 		});
@@ -935,15 +986,8 @@ function init() {
 			source: { x: -2, y: -1, z: 3, h: 1 } }); //Create an OmniLight
 
 		world.addLight(olight);
-		// new OmniLight({intensity:1.0,
-		// 				source:{x:0, y:2, z: 0.2, h:1}}),
-		// new OmniLight({intensity:1.0,
-		// 				source:{x:0, y:-2, z: 0.2, h:1}}),
-		// new OmniLight({intensity:1.0,
-		// 				source:{x:2, y:0, z: 0.2, h:1}}),
-		// new OmniLight({intensity:1.0,
-		// 				source:{x:-2, y:0, z: 0.2, h:1}}))
 
+		// Setup Raytracer and Kick it off
 		var raytracer = new _Raytracer2.default({
 			world: world,
 			pixelRenderer: window.canvas2D
