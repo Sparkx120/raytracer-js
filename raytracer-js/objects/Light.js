@@ -8,13 +8,13 @@
  * @version 0.1 (2015/08)
  * @license MIT
  */
-export class Light{
-	constructor(config){
-		if(config.color)
+export class Light {
+	constructor(config) {
+		if (config.color)
 			this.color = config.color;
 		else
-			this.color = {r:255,g:255,b:255,a:255}
-		if(config.intensity)
+			this.color = { r: 255, g: 255, b: 255, a: 255 }
+		if (config.intensity)
 			this.intensity = config.intensity;
 		else
 			this.inensity = 1.0;

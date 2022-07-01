@@ -1,16 +1,16 @@
-import {GenericObject} from "./GenericObject.js";
-import {Math3D, Matrices3D} from "../lib";
+import { GenericObject } from "./GenericObject.js";
+import { Math3D, Matrices3D } from "../lib";
 
 /**import {Math3D, Matricies3D} from "../static/Math3D.js";
  * Sphere is a Generic Object Sphere Definition for Raytracer-JS (Now in ES6)
  * @class  Sphere
- * 
+ *
  * @author  James Wake (SparkX120)
  * @version 0.1 (2015/08)
  * @license MIT
  */
-export class Sphere extends GenericObject{
-	constructor(config){
+export class Sphere extends GenericObject {
+	constructor(config) {
 		super(config);
 	}
 
@@ -18,14 +18,14 @@ export class Sphere extends GenericObject{
 	 * Ray Intersect the Object to see if it is in the Rays path.
 	 * @param  {Ray} ray The ray to intersect
 	 */
-	rayIntersect(ray){
+	rayIntersect(ray) {
 		//Ray computation
 		var eRay = ray.e;
 		var dRay = ray.d;
 		var e = Math3D.multiplyVectorByMatrix(this.transformInverse, eRay);
 		var d = Math3D.multiplyVectorByMatrix(this.transformInverse, dRay);
 		//d = Math3D.scalarMultiply(d, -1);
-	    var eVec = {x:e.x, y:e.y, z:e.z, h:0};
+		var eVec = { x: e.x, y: e.y, z: e.z, h: 0 };
 
 		//define Spherical Geometry Intersection here
 		var magD = Math3D.magnitudeOfVector(d);
@@ -35,7 +35,7 @@ export class Sphere extends GenericObject{
 		var b = Math3D.dotProduct(e, d);
 		var c = (magE * magE) - 1;
 
-		var det = (b*b) - (a*c);
+		var det = (b * b) - (a * c);
 
 		// if(det>=0){
 		// 	console.log("intersect");
@@ -45,16 +45,16 @@ export class Sphere extends GenericObject{
 		// }
 
 		// Intersection Calculations and Intersection Additions
-		if(det==0){
-			var t = b/a;
+		if (det == 0) {
+			var t = b / a;
 			ray.addIntersect(t, this);
 		}
 
-		if(det>0){
-			var t1 = ((-b/(a)) + (Math.sqrt(det)/(a)));
-			var t2 = ((-b/(a)) - (Math.sqrt(det)/(a)));
-			ray.addIntersect({t: t1, obj: this});
-			ray.addIntersect({t: t2, obj: this});
+		if (det > 0) {
+			var t1 = ((-b / (a)) + (Math.sqrt(det) / (a)));
+			var t2 = ((-b / (a)) - (Math.sqrt(det) / (a)));
+			ray.addIntersect({ t: t1, obj: this });
+			ray.addIntersect({ t: t2, obj: this });
 		}
 	}
 
@@ -63,9 +63,9 @@ export class Sphere extends GenericObject{
 	 * @param  {Object{x,y,z,h}} point The Point to compute at
 	 * @return {Object{x,y,z,h}}       The Normal Vector
 	 */
-	getNormalAt(point){
+	getNormalAt(point) {
 		var p = Math3D.multiplyVectorByMatrix(this.transformInverse, point);
-		var norm = {x:-p.x, y:-p.y, z:-p.z, h:0};
+		var norm = { x: -p.x, y: -p.y, z: -p.z, h: 0 };
 		norm = Math3D.normalizeVector(norm);
 		norm = Math3D.multiplyVectorByMatrix(this.transform, norm);
 		return norm;
@@ -76,7 +76,7 @@ export class Sphere extends GenericObject{
 	 * @param  {Object{x,y,z,h}} point The Point to compute at
 	 * @return {Object{r,g,b,a}}       The Color of the UVMap pixel
 	 */
-	getUVMapAt(point){
-		return {r:0,g:0,b:0,a:0}; //Not Implemented Yet
+	getUVMapAt(point) {
+		return { r: 0, g: 0, b: 0, a: 0 }; //Not Implemented Yet
 	}
 }

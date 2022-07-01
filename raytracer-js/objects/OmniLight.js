@@ -1,4 +1,4 @@
-import {Light} from "./Light.js";
+import { Light } from "./Light.js";
 
 /**
  * OmniLight class (now in ES6 Standard format)
@@ -10,10 +10,10 @@ import {Light} from "./Light.js";
  * @version 0.1 (2015/08)
  * @license MIT
  */
-export class OmniLight extends Light{
-	constructor(config){
+export class OmniLight extends Light {
+	constructor(config) {
 		super(config);
-		if(config.source)
+		if (config.source)
 			this.source = config.source
 		else
 			throw "Please define source in config for OmniLight";
