@@ -696,7 +696,8 @@ var Raytracer = function () {
 				r: object.diffuseC.r * totalIntensity,
 				g: object.diffuseC.g * totalIntensity,
 				b: object.diffuseC.b * totalIntensity,
-				a: 255 };
+				a: 255
+			};
 		}
 	}, {
 		key: "_specularShader",
@@ -753,7 +754,8 @@ var Raytracer = function () {
 				r: object.specularC.r * totalIntensity,
 				g: object.specularC.g * totalIntensity,
 				b: object.specularC.b * totalIntensity,
-				a: 255 };
+				a: 255
+			};
 		}
 	}, {
 		key: "_reflectionShader",
@@ -775,7 +777,8 @@ var Raytracer = function () {
 					r: reflection.r,
 					g: reflection.g,
 					b: reflection.b,
-					a: 255 };
+					a: 255
+				};
 			}
 
 			return this.backgroundColor;
@@ -821,7 +824,8 @@ var Raytracer = function () {
 				r: refraction.r,
 				g: refraction.g,
 				b: refraction.b,
-				a: 255 };
+				a: 255
+			};
 		}
 	}]);
 
@@ -873,7 +877,7 @@ function init() {
 	window.onload = function () {
 		//Camera
 		var camera = new _lib.Camera({
-			position: { x: 2, y: 2, z: 1, h: 1 },
+			position: { x: 2, y: 2, z: 1.25, h: 1 },
 			gaze: { x: 0, y: 0, z: 0, h: 1 },
 			width: canvas2D.width,
 			height: canvas2D.height,
@@ -897,9 +901,9 @@ function init() {
 		// var fsphere = 0.25;
 
 		//Scale of Sphere
-		var scale = 0.15;
+		var scale = 0.10;
 		//Scale of jitter of scale
-		var scaleF = 0.0;
+		var scaleF = 0;
 		//Spatial Jitter
 		var jitter = 0;
 		//Size of x in +/-0
@@ -910,6 +914,8 @@ function init() {
 		var zsphere = 1;
 		//Step in x,y,z
 		var fsphere = 0.5;
+		//color jitter
+		var cjitter = 1;
 
 		for (var i = -xsphere; i <= xsphere; i = i + fsphere) {
 			for (var j = -ysphere; j <= ysphere; j = j + fsphere) {
@@ -917,6 +923,9 @@ function init() {
 					console.log("Making sphere at x:" + i + " y:" + j);
 
 					var sfact = scale * (Math.random() * scaleF + (1 - scaleF));
+					var cfactr = 255 * (Math.random() * cjitter + (1 - cjitter));
+					var cfactg = 255 * (Math.random() * cjitter + (1 - cjitter));
+					var cfactb = 255 * (Math.random() * cjitter + (1 - cjitter));
 					var x = i + (Math.random() * jitter - jitter);
 					var y = j + (Math.random() * jitter - jitter);
 					var z = k + (Math.random() * jitter - jitter);
@@ -925,15 +934,26 @@ function init() {
 					// console.log(mat);
 
 					world.addObject(new _objects.Sphere({
-						baseC: { r: 0, g: 0, b: 255, a: 255 },
+						baseC: { r: cfactr, g: cfactg, b: cfactb, a: 255 },
 						specularC: { r: 255, g: 255, b: 255, a: 255 },
+						diffuseFactor: 0.8,
+						reflectionFactor: 0.1,
 						transform: _lib.Math3D.transformPipe(pipe)
 					})); //Create Generic Sphere
 				}
 			}
 		}
 
-		var floor = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+		world.addObject(new _objects.Sphere({
+			baseC: { r: 255, g: 255, b: 255, a: 255 },
+			specularC: { r: 255, g: 255, b: 255, a: 255 },
+			reflectionFactor: 0.5,
+			diffuseFactor: 0.4,
+			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(0, 0, 0.5), _lib.Math3D.scale(0.25, 0.25, 0.25)])
+		})); //Create Generic Sphere
+
+		var floor = new _objects.Plane({
+			baseC: { r: 100, g: 100, b: 100, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
 			reflectionFactor: 0.2,
@@ -942,48 +962,55 @@ function init() {
 		});
 		world.addObject(floor);
 
-		var wall1 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+		var wall1 = new _objects.Plane({
+			baseC: { r: 200, g: 200, b: 50, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.1,
+			reflectionFactor: 0,
 			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(-4, -4, 0), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(Math.PI / 2, { x: 0, y: 1, z: 0, h: 1 })])
 		});
 		// world.addObject(wall1);
 
-		var wall2 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+		var wall2 = new _objects.Plane({
+			baseC: { r: 200, g: 50, b: 50, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.1,
+			reflectionFactor: 0,
 			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(-4, -4, 0), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(-Math.PI / 2, { x: 1, y: 0, z: 0, h: 1 })])
 		});
 		// world.addObject(wall2);
 
-		var wall3 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+		var wall3 = new _objects.Plane({
+			baseC: { r: 50, g: 200, b: 50, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0,
 			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(4, 4, 0), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(-Math.PI / 2, { x: 0, y: 1, z: 0, h: 1 })])
 		});
 		// world.addObject(wall3);
 
-		var wall4 = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+		var wall4 = new _objects.Plane({
+			baseC: { r: 50, g: 50, b: 200, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0,
 			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(4, 4, 0), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(Math.PI / 2, { x: 1, y: 0, z: 0, h: 1 })])
 		});
 		// world.addObject(wall4);
 
-		var cieling = new _objects.Plane({ baseC: { r: 100, g: 100, b: 100, a: 255 },
+		var cieling = new _objects.Plane({
+			baseC: { r: 50, g: 50, b: 50, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0,
 			transform: _lib.Math3D.transformPipe([_lib.Math3D.translate(0, 0, 9), _lib.Math3D.scale(10, 10, 10), _lib.Math3D.rotateOnArbitrary(Math.PI, { x: 0, y: 0, z: 1, h: 1 })])
 		});
 		// world.addObject(cieling);
 
-		var olight = new _objects.OmniLight({ intensity: 2.5,
-			source: { x: -2, y: -1, z: 3, h: 1 } }); //Create an OmniLight
+		var olight = new _objects.OmniLight({
+			intensity: 2.5,
+			source: { x: -2, y: -1, z: 3, h: 1 }
+		}); //Create an OmniLight
 
 		world.addLight(olight);
 
@@ -1393,14 +1420,12 @@ var Math3D = exports.Math3D = function () {
 	}, {
 		key: "crossProduct",
 		value: function crossProduct(a, b) {
-			// if(a.h > 0 || b.h > 0){
-			// 	console.log("Point!!!");
-			// 	throw "Error Points can't be used in Crossproduct";
-			// }
-			return { x: a.y * b.z - a.z * b.y,
+			return {
+				x: a.y * b.z - a.z * b.y,
 				y: a.z * b.x - a.x * b.z,
 				z: a.x * b.y - a.y * b.x,
-				h: 0.0 };
+				h: 0.0
+			};
 		}
 
 		/**
@@ -1426,10 +1451,12 @@ var Math3D = exports.Math3D = function () {
 	}, {
 		key: "scalarMultiply",
 		value: function scalarMultiply(v, mag) {
-			return { x: v.x * mag,
+			return {
+				x: v.x * mag,
 				y: v.y * mag,
 				z: v.z * mag,
-				h: v.h * mag };
+				h: v.h * mag
+			};
 		}
 
 		/**
@@ -1454,10 +1481,12 @@ var Math3D = exports.Math3D = function () {
 	}, {
 		key: "addPoints",
 		value: function addPoints(a, b) {
-			return { x: a.x + b.x,
+			return {
+				x: a.x + b.x,
 				y: a.y + b.y,
 				z: a.z + b.z,
-				h: a.h + b.h };
+				h: a.h + b.h
+			};
 		}
 
 		/**
@@ -1483,10 +1512,12 @@ var Math3D = exports.Math3D = function () {
 	}, {
 		key: "subtractPoints",
 		value: function subtractPoints(a, b) {
-			return { x: a.x - b.x,
+			return {
+				x: a.x - b.x,
 				y: a.y - b.y,
 				z: a.z - b.z,
-				h: 1.0 };
+				h: 1.0
+			};
 		}
 	}, {
 		key: "normalizeVector",
@@ -1591,10 +1622,12 @@ var Math3D = exports.Math3D = function () {
 	}, {
 		key: "multiplyVectorByMatrix",
 		value: function multiplyVectorByMatrix(m, b) {
-			return { x: b.x * m[0][0] + b.y * m[0][1] + b.z * m[0][2] + b.h * m[0][3],
+			return {
+				x: b.x * m[0][0] + b.y * m[0][1] + b.z * m[0][2] + b.h * m[0][3],
 				y: b.x * m[1][0] + b.y * m[1][1] + b.z * m[1][2] + b.h * m[1][3],
 				z: b.x * m[2][0] + b.y * m[2][1] + b.z * m[2][2] + b.h * m[2][3],
-				h: b.x * m[3][0] + b.y * m[3][1] + b.z * m[3][2] + b.h * m[3][3] };
+				h: b.x * m[3][0] + b.y * m[3][1] + b.z * m[3][2] + b.h * m[3][3]
+			};
 		}
 
 		/**
@@ -1790,7 +1823,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * Ray Object to contain data for a Ray Intersect List (Now in ES6)
  * @class  Ray
  * @param {Object} config See Constructor
- * 
+ *
  * @author  James Wake (SparkX120)
  * @version 0.1 (2015/08)
  * @license MIT
@@ -1954,7 +1987,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 /**
  * Ray Object to contain data for a Ray Intersect List (Now in ES6)
  * @class  World
- * 
+ *
  * @author  James Wake (SparkX120)
  * @version 0.1 (2018/06)
  * @license MIT
@@ -2107,7 +2140,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 /**
  * Generic Object is the abstract 3DObject Definition for Raytracer-JS (Now in ES6)
  * @class  GenericObject
- * 
+ *
  * @author  James Wake (SparkX120)
  * @version 0.1 (2015/08)
  * @license MIT
@@ -2377,7 +2410,7 @@ function _inherits(subClass, superClass) { if (typeof superClass !== "function" 
 /**import {Math3D, Matricies3D} from "../static/Math3D.js";
  * Sphere is a Generic Object Sphere Definition for Raytracer-JS (Now in ES6)
  * @class  Sphere
- * 
+ *
  * @author  James Wake (SparkX120)
  * @version 0.1 (2015/08)
  * @license MIT

@@ -24,7 +24,7 @@ export default function init() {
 	window.onload = () => {
 		//Camera
 		var camera = new Camera({
-			position: { x: 2, y: 2, z: 1, h: 1 },
+			position: { x: 2, y: 2, z: 1.25, h: 1 },
 			gaze: { x: 0, y: 0, z: 0, h: 1 },
 			width: canvas2D.width,
 			height: canvas2D.height,
@@ -48,9 +48,9 @@ export default function init() {
 		// var fsphere = 0.25;
 
 		//Scale of Sphere
-		let scale = 0.15;
+		let scale = 0.10;
 		//Scale of jitter of scale
-		let scaleF = 0.0;
+		let scaleF = 0;
 		//Spatial Jitter
 		let jitter = 0;
 		//Size of x in +/-0
@@ -61,6 +61,8 @@ export default function init() {
 		let zsphere = 1;
 		//Step in x,y,z
 		let fsphere = 0.5;
+		//color jitter
+		let cjitter = 1;
 
 		for (let i = -xsphere; i <= xsphere; i = i + fsphere) {
 			for (let j = -ysphere; j <= ysphere; j = j + fsphere) {
@@ -68,6 +70,9 @@ export default function init() {
 					console.log("Making sphere at x:" + i + " y:" + j);
 
 					let sfact = scale * ((Math.random() * scaleF) + (1 - scaleF));
+					let cfactr = 255 * ((Math.random() * cjitter) + (1 - cjitter));
+					let cfactg = 255 * ((Math.random() * cjitter) + (1 - cjitter));
+					let cfactb = 255 * ((Math.random() * cjitter) + (1 - cjitter));
 					let x = i + (Math.random() * jitter - jitter);
 					let y = j + (Math.random() * jitter - jitter);
 					let z = k + (Math.random() * jitter - jitter);
@@ -79,13 +84,26 @@ export default function init() {
 					// console.log(mat);
 
 					world.addObject(new Sphere({
-						baseC: { r: 0, g: 0, b: 255, a: 255 },
+						baseC: { r: cfactr, g: cfactg, b: cfactb, a: 255 },
 						specularC: { r: 255, g: 255, b: 255, a: 255 },
+						diffuseFactor: 0.8,
+						reflectionFactor: 0.1,
 						transform: Math3D.transformPipe(pipe)
 					})); //Create Generic Sphere
 				}
 			}
 		}
+
+		world.addObject(new Sphere({
+			baseC: { r: 255, g: 255, b: 255, a: 255 },
+			specularC: { r: 255, g: 255, b: 255, a: 255 },
+			reflectionFactor: 0.5,
+			diffuseFactor: 0.4,
+			transform: Math3D.transformPipe([
+				Math3D.translate(0, 0, 0.5),
+				Math3D.scale(0.25, 0.25, 0.25)
+			])
+		})); //Create Generic Sphere
 
 		var floor = new Plane({
 			baseC: { r: 100, g: 100, b: 100, a: 255 },
@@ -101,10 +119,10 @@ export default function init() {
 		world.addObject(floor);
 
 		var wall1 = new Plane({
-			baseC: { r: 100, g: 100, b: 100, a: 255 },
+			baseC: { r: 200, g: 200, b: 50, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.1,
+			reflectionFactor: 0,
 			transform: Math3D.transformPipe([
 				Math3D.translate(-4, -4, 0),
 				Math3D.scale(10, 10, 10),
@@ -115,10 +133,10 @@ export default function init() {
 		// world.addObject(wall1);
 
 		var wall2 = new Plane({
-			baseC: { r: 100, g: 100, b: 100, a: 255 },
+			baseC: { r: 200, g: 50, b: 50, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.1,
+			reflectionFactor: 0,
 			transform: Math3D.transformPipe([
 				Math3D.translate(-4, -4, 0),
 				Math3D.scale(10, 10, 10),
@@ -129,10 +147,10 @@ export default function init() {
 		// world.addObject(wall2);
 
 		var wall3 = new Plane({
-			baseC: { r: 100, g: 100, b: 100, a: 255 },
+			baseC: { r: 50, g: 200, b: 50, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0,
 			transform: Math3D.transformPipe([
 				Math3D.translate(4, 4, 0),
 				Math3D.scale(10, 10, 10),
@@ -143,10 +161,10 @@ export default function init() {
 		// world.addObject(wall3);
 
 		var wall4 = new Plane({
-			baseC: { r: 100, g: 100, b: 100, a: 255 },
+			baseC: { r: 50, g: 50, b: 200, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0,
 			transform: Math3D.transformPipe([
 				Math3D.translate(4, 4, 0),
 				Math3D.scale(10, 10, 10),
@@ -157,10 +175,10 @@ export default function init() {
 		// world.addObject(wall4);
 
 		var cieling = new Plane({
-			baseC: { r: 100, g: 100, b: 100, a: 255 },
+			baseC: { r: 50, g: 50, b: 50, a: 255 },
 			diffuseFactor: 0.8,
 			specularFactor: 0.1,
-			reflectionFactor: 0.003,
+			reflectionFactor: 0,
 			transform: Math3D.transformPipe([
 				Math3D.translate(0, 0, 9),
 				Math3D.scale(10, 10, 10),
